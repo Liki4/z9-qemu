@@ -1,0 +1,98 @@
+# WonderLantern Z9 QEMU
+
+[中文](README.zh-CN.md) · [Build](docs/build.md) · [Firmware](docs/firmware.md) · [Usage](docs/usage.md) · [Architecture](docs/architecture.md) · [Debugging](docs/debugging.md) · [Research notes](docs/research-notes.md) · [Testing](docs/testing.md) · [Publication](docs/publication.md)
+
+An experimental QEMU 10.2.4 machine for **Nikon Z9 C 5.32**, with a local
+browser controller and a functional Bayer → ISP → guest buffers → LCD path.
+This is an independent WonderLantern research and learning project.
+
+**Bring your own firmware.** No Nikon firmware, decrypted proprietary code,
+boot ROM, flash dump, key, font, icon bitmap, calibration image, photograph or
+camera UI screenshot is included. The tools do not download Nikon firmware.
+The original UI appears only when you provide the compatible local payload.
+
+This is a host-side emulator, not a camera-installable modification, a Magic
+Lantern port, or a complete EXPEED hardware specification. It has no USB
+camera access, updater or flashing tool. Z7 is a separate frozen project;
+ZR is not supported by this release. See [NOTICE.md](NOTICE.md).
+
+## Current scope
+
+The local research model runs the original English menu and shooting HUD.
+The firmware renders ISO/shutter, text/icon outlines and the red no-card mark.
+The experimental pixel path consumes a local RGGB input and writes the
+firmware's submitted output buffers; LCD composition uses those buffers and
+the original graphics overlay. It does not paste an image behind a browser UI.
+
+The standalone launcher has passed three native MENU returns with fresh RAW
+and LCD video plus four independent pixel comparisons. Three preceding cold
+boots of the same functional profile also passed. See [testing](docs/testing.md)
+for the exact evidence and [service-core events](docs/service-events.md) for
+the scheduling model and its limits.
+
+| Implemented in the experimental profile | Outside the verified scope |
+| --- | --- |
+| Four AArch64 CPUs, GIC, inferred RAM windows and selected peripherals | Physical EXPEED register specification, Boot ROM or natural power-on |
+| Original menu/shooting tasks with explicit external inputs | Complete MCU, lens, CMOS or GPIO protocol |
+| Static linear RGGB/u16 input and functional NV12/NV16 output | Nikon ISP algorithms, sensor calibration, accurate AE, AF/PDAF |
+| Selected graphics paths, coverage, alpha and LCD scanout | Complete GPU implementation or measured silicon timing |
+| Source drain/acknowledgement and descriptor ownership models | Writing cards, photographs, movie recording or mechanical timing |
+
+Several resource bodies are missing. The profile supplies small **synthetic
+virtual ROM inputs**, one parameter body derived at runtime from the user's
+firmware defaults, dummy SPI receive values and explicit external status
+events. These assumptions are recorded locally. The host uses hardware
+breakpoints to service the incomplete MCU/GPIO model. It does not patch guest
+instructions, PC, readiness flags, OS wait results or watchdogs.
+
+## Quick start
+
+Linux, Python 3.12+, a C toolchain and about 6 GB of available memory are a
+practical starting point. On Windows explicitly select your intended WSL
+distribution. This project's environment is `ubuntu-noble-nikon`; the
+unrelated coursework distribution `ubuntu-noble` is excluded by the tools.
+
+```sh
+git clone https://github.com/WonderLantern/z9-qemu.git
+cd z9-qemu
+sudo apt-get update
+sudo apt-get install build-essential ninja-build patch pkg-config python3-venv \
+    libglib2.0-dev libpixman-1-dev zlib1g-dev libfdt-dev
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+python tools/build.py --work-dir "$HOME/wonderlantern-z9-build" --jobs 2
+python tools/make_cmos.py
+python tools/run.py --firmware /absolute/path/to/z9-main-payload.bin
+```
+
+Open **http://127.0.0.1:8789/**. Wait for the original live-view image and
+nonzero RAW/LCD counters. MENU and half-shutter inputs go through the original
+MCU receive path. Use **Half shutter hold** to leave the menu for shooting,
+and **Release** to release that input. Ctrl+C stops the owned emulator.
+
+The default input is locally generated color bars with a luminance ramp. To
+use your own image, run `python tools/make_cmos.py --image /path/to/photo.jpg`
+before starting the emulator. The 640×480, 12-bit test input is a convenience;
+it is **not a claim about Z9's physical sensor stream**.
+
+The required extracted MAIN payload is **81,823,629 bytes**, SHA-256:
+
+```text
+6380ded18395ce11cb327c766721274c85127d2cf1a1e887ee60e3d156810bdd
+```
+
+An upgrade package is not the same file. This repository supplies no
+decryption key or extraction service. See [firmware input](docs/firmware.md).
+
+## Layout and contributions
+
+`qemu/` contains the board, pixel code and upstream integration. `tools/`
+contains the builder, controller, virtual peers and local input generators.
+`tests/` contains synthetic, firmware-free tests. `docs/` explains setup,
+model assumptions, evidence and research techniques.
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before attaching logs or creating a PR.
+Runtime folders can contain proprietary bytes even when the repository is
+source-only. Keep them local. Source licensing is GPL-2.0-or-later except as
+documented in upstream licensing notices.
