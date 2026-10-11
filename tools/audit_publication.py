@@ -19,6 +19,24 @@ IGNORED = {'.git','.local','.build','.venv','__pycache__'}
 FILES.add('tools/validate_run.py')
 FILES.update({'qemu/arm-service-events.patch','tools/z9_timing_input.py',
               'tools/check_service_events.py','docs/service-events.md'})
+FILES.update({
+    'qemu/designware-dma.patch', 'qemu/nikon-z9-pcie.h', 'qemu/nikon-z9-d980.h',
+    'qemu/nikon-z9-jpeg.h', 'qemu/nikon-z9-capture-nv16.h', 'qemu/nikon-z9-thumbnail-nv16.h',
+    'tools/audit_native_nef.py', 'tools/capture_engine151_pixels.py', 'tools/capture_engine152c.py',
+    'tools/capture_engine153.py', 'tools/capture_engine153_layout.py', 'tools/capture_engine15e2.py',
+    'tools/capture_frame_conversion.py', 'tools/capture_jpeg_completed.py',
+    'tools/capture_native_image_arguments.py', 'tools/capture_nv16_pipeline.py',
+    'tools/capture_processing_input.py', 'tools/capture_readiness.py', 'tools/capture_recovery_flow.py',
+    'tools/capture_thumbnail_nv16.py', 'tools/capture_thumbnail_route.py', 'tools/capture_virtual_ram.py',
+    'tools/capture_workflow_ready.py', 'tools/ccomp_command_peer.py', 'tools/extract_virtual_exfat.py',
+    'tools/fast_capture_worker.py', 'tools/inspect_virtual_exfat.py', 'tools/native_log_guard.py',
+    'tools/native_menu_screen.py', 'tools/private_bounded_qmp.py', 'tools/capture_sequence.py',
+    'tools/rtc_mcu_input.py', 'tools/virtual_recording_card.py', 'tools/z9_exposure_input.py',
+    'tools/z9_navigation_input.py', 'tools/z9_quality_input.py', 'tools/capture_support.py',
+    'tools/capture.py', 'tools/export_card.py', 'tools/capture-profile.json',
+    'requirements-capture.txt', 'tests/test_capture_contracts.py',
+    'docs/capture.md', 'docs/capture.zh-CN.md',
+})
 SECRET_PATTERNS = [
     re.compile(r'gh[opusr]_[A-Za-z0-9]{30,}'),
     re.compile(r'github_pat_[A-Za-z0-9_]{30,}'),
@@ -27,7 +45,7 @@ SECRET_PATTERNS = [
 
 def validate(path, data):
     if path not in FILES | {MANIFEST}: raise ValueError('Unreviewed public path: '+path)
-    if len(data)>(640*1024 if path == 'qemu/nikon-z9-lab.c' else 512*1024) or b'\0' in data: raise ValueError('Unexpected binary/large content: '+path)
+    if len(data)>(1024*1024 if path == 'qemu/nikon-z9-lab.c' else 512*1024) or b'\0' in data: raise ValueError('Unexpected binary/large content: '+path)
     text = data.decode('utf-8')
     if any(pattern.search(text) for pattern in SECRET_PATTERNS): raise ValueError('Credential pattern in '+path)
     if re.search(r"['\"][0-9a-fA-F]{512,}['\"]",text): raise ValueError('Large embedded hex data needs review: '+path)

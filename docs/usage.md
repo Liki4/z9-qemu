@@ -44,6 +44,13 @@ not an indefinitely validated camera service.
 Input format: 32-byte header, `NZ9RAW1\0`, then six little-endian u32 values
 for width, height, bits, CFA=0, black and white; remaining pixels are linear
 RGGB unsigned 16-bit little-endian samples. Even dimensions are required.
-12-bit values are stored in 16-bit words, not packed RAW12. The sample generator
+12-bit or 14-bit values are stored in 16-bit words, not packed RAW12/RAW14. The sample generator
 undoes sRGB transfer before Bayer sampling and uses a simple stretch to the
 selected dimensions. This is a test fixture, not a physical sensor protocol.
+
+For shutter release, a full NEF on a virtual card, fresh post-shot live view
+and two post-shot menu returns, use the separate [capture workflow](capture.md).
+The browser preview profile does not attach a card or expose full shutter/REC.
+The capture profile uses full-size 8256×5504/14-bit host input (or 8280×5520), opt-in image/storage
+models and a request-bound CCOMP MCU/GPIO peer. Do not combine it with another
+running preview process or count LCD video as a movie recording.

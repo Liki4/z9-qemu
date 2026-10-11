@@ -1,7 +1,9 @@
 # Building
 
 Use Linux with Python 3.12+, GCC/Clang, Ninja, patch, pkg-config, GLib, Pixman, zlib
-and libfdt development headers. Install the Python dependencies from
+and libfdt/libjpeg development headers. Install `exfatprogs` for the capture
+workflow and the optional `requirements-capture.txt` for independent NEF
+decoding. Install the Python dependencies from
 `requirements.txt` in a virtual environment. See the README for Ubuntu commands.
 
 `python tools/build.py --work-dir /your/linux/path --jobs 2` downloads only
@@ -44,3 +46,10 @@ install a kernel/guest OS image. The separate optional
 behavior, enabled only by the explicit board option. Its source hash is
 included in the build manifest. Repeated preparation verifies the applied
 patch; an unexpected or partially patched upstream source is rejected.
+
+The capture build also selects upstream DesignWare PCIe, NVMe and its required
+SPDM socket support, and links the authored JPEG adapter against system
+libjpeg. `qemu/designware-dma.patch` bounds ATU windows above 4 GiB using the
+base-high and limit-low fields; it does not provide a physical PCIe PHY or
+camera identity. The board exposes only its explicit DMA apertures. All
+overlay headers and upstream patches are fingerprinted in the build receipt.

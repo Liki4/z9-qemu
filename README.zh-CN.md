@@ -1,16 +1,19 @@
 # WonderLantern Z9 QEMU
 
-[English](README.md) · [构建](docs/build.md) · [固件输入](docs/firmware.md) · [原理](docs/architecture.md) · [测试边界](docs/testing.md)
+[English](README.md) · [构建](docs/build.md) · [固件输入](docs/firmware.md) · [RAW 拍摄](docs/capture.zh-CN.md) · [原理](docs/architecture.md) · [测试边界](docs/testing.md)
 
 本项目提供 QEMU 10.2.4 的实验性 Z9 C 5.32 板级模型、极简本地网页控制器，
-以及 Bayer → 功能性 ISP → 固件提交的缓冲区 → LCD 的图像路径。
+以及 Bayer → 功能性 ISP → 固件提交的缓冲区 → LCD 的图像路径、
+完整 RAW 拍摄和虚拟 NVMe/exFAT 写卡路径。
 
 **固件由用户自行提供。** 仓库不包含尼康固件、解密后的私有程序、密钥、机身转储、
 字体、图标位图、校准数据、私人照片或原厂界面截图，也不会自动下载尼康固件。
 这是 WonderLantern 独立开展的研究与学习项目，与尼康没有隶属或背书关系。
 
-独立启动器已通过三次原生菜单往返、RAW/LCD 持续产帧及四次独立像素校验；此前
-相同功能配置的三次冷启动也通过。具体证据见 [测试说明](docs/testing.md)。本地模型
+完整拍摄配置已通过快门释放、固件写入 **8280×5520、14 位 NEF**、拍后恢复新取景帧
+和两次真实 PHOTO 菜单往返。LibRaw 解码后的 **45,705,600 个 RAW 样本**全部等于
+实际 guest 生产缓冲；文件中的三路 JPEG 预览也逐字节匹配编码输出。
+旧取景启动器曾通过三次菜单往返及四次独立像素校验。具体证据见 [测试说明](docs/testing.md)。本地模型
 能够运行原厂英文菜单、拍摄界面和 RAW 图像路径；ISO、快门、黑色描边及红色无卡
 图标来自固件。网页仅展示 QEMU LCD，不自行绘制相机界面。
 
@@ -29,6 +32,21 @@ python tools/run.py --firmware /绝对路径/z9-main-payload.bin
 MENU 进入菜单，Half shutter hold 半按返回拍摄，Release 释放半按。Ctrl+C 退出。
 需要自己的图片时，先运行 `python tools/make_cmos.py --image /路径/图片.jpg`。
 
+拍摄完整 RAW 时先退出取景进程，再运行：
+
+```sh
+python -m pip install -r requirements-capture.txt
+python tools/make_cmos.py --width 8256 --height 5504 --bits 14 \
+    --output .local/z9-14bit.raw
+python tools/capture.py --firmware /绝对路径/z9-main-payload.bin \
+    --output "$HOME/wonderlantern-z9-runs/capture-001" --audit
+```
+
+此命令通过原生按键路径选择 RAW、拍摄一张照片、等待恢复取景并验证两轮菜单，
+退出 QEMU 后才从实际虚拟卡提取 NEF 和校验。通常需数分钟。
+网页仍提供取景和菜单操作；快门流程用独立命令执行。输出目录必须是新的，
+建议置于 Linux 文件系统。具体格式、依赖、输出及边界见 [RAW 拍摄说明](docs/capture.zh-CN.md)。
+
 唯一支持的 MAIN 文件为 81,823,629 字节，SHA-256：
 
 ```text
@@ -45,11 +63,13 @@ MENU 进入菜单，Half shutter hold 半按返回拍摄，Release 释放半按�
   在本机生成；这些不是恢复出的工厂校准数据。
 - GPIO/MCU 服务使用硬件断点协调和外部事件输入。没有通过修改 PC、任务结果、
   OS 标志或看门狗让界面跳过流程。
-- 输入示例为 640×480、12-bit RGGB/u16；这只是实验格式，不是真实 Z9 CMOS 参数。
+- 网页默认输入为 640×480、12-bit RGGB/u16，完整拍摄使用全尺寸 14 位源；
+  这些都是实验格式，不代表已验证真实 Z9 CMOS 协议。
 - ISP 使用通用插值和颜色转换。看到 ISO 数字不等于真实自动曝光已实现。
 - 服务核使用有限的 WFE/SEV 等待模型，配合指令时钟和虚拟时间外部输入；这不是
   完整 ARM 事件实现或实测硬件时序。恢复运行请冷启动，整机热复位尚未支持。
-- 尚不承诺 AF/PDAF、机械时序、写卡拍照、录像、完整 GPU 或真实 CMOS 协议。
+- 已验证功能性 NEF 写卡与拍后恢复；AF/PDAF、机械时序、录像、RAW 预拍摄、
+  完整 GPU 和真实 CMOS 协议尚未验收。
 - 本项目不访问 USB 相机、不刷机，也不是可安装进相机的软件。Z7 和 ZR 独立推进。
 
 [研究笔记](docs/research-notes.md)记录可跨机型复用的方法；寄存器地址、事件位和

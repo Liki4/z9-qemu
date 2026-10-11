@@ -14,6 +14,10 @@ VERSION = '10.2.4'
 SHA256 = '821b545b92f165e57dddccac5077d76d4d436a226595b8813ad59306bbfd0746'
 SOURCES = ['qemu/nikon-z9-lab.c','qemu/nikon-z9-pixels.h','qemu/nikon-raw-pixels.h','qemu/prepare_source.py']
 SOURCES.append('qemu/arm-service-events.patch')
+SOURCES.append('qemu/designware-dma.patch')
+SOURCES.extend('qemu/' + name for name in (
+    'nikon-z9-pcie.h', 'nikon-z9-d980.h', 'nikon-z9-jpeg.h',
+    'nikon-z9-capture-nv16.h', 'nikon-z9-thumbnail-nv16.h'))
 
 def digest(path):
     h = hashlib.sha256()

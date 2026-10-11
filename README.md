@@ -1,9 +1,10 @@
 # WonderLantern Z9 QEMU
 
-[中文](README.zh-CN.md) · [Build](docs/build.md) · [Firmware](docs/firmware.md) · [Usage](docs/usage.md) · [Architecture](docs/architecture.md) · [Debugging](docs/debugging.md) · [Research notes](docs/research-notes.md) · [Testing](docs/testing.md) · [Publication](docs/publication.md)
+[中文](README.zh-CN.md) · [Build](docs/build.md) · [Firmware](docs/firmware.md) · [Usage](docs/usage.md) · [RAW capture](docs/capture.md) · [Architecture](docs/architecture.md) · [Debugging](docs/debugging.md) · [Research notes](docs/research-notes.md) · [Testing](docs/testing.md) · [Publication](docs/publication.md)
 
 An experimental QEMU 10.2.4 machine for **Nikon Z9 C 5.32**, with a local
-browser controller and a functional Bayer → ISP → guest buffers → LCD path.
+browser controller, a functional Bayer → ISP → guest buffers → LCD path,
+and native full-resolution RAW capture to a virtual NVMe/exFAT card.
 This is an independent WonderLantern research and learning project.
 
 **Bring your own firmware.** No Nikon firmware, decrypted proprietary code,
@@ -24,11 +25,15 @@ The experimental pixel path consumes a local RGGB input and writes the
 firmware's submitted output buffers; LCD composition uses those buffers and
 the original graphics overlay. It does not paste an image behind a browser UI.
 
-The standalone launcher has passed three native MENU returns with fresh RAW
-and LCD video plus four independent pixel comparisons. Three preceding cold
-boots of the same functional profile also passed. See [testing](docs/testing.md)
-for the exact evidence and [service-core events](docs/service-events.md) for
-the scheduling model and its limits.
+The full capture profile has passed shutter release, a firmware-written
+**8280×5520, 14-bit NEF**, fresh post-shot live view and two actual PHOTO-menu
+round trips. LibRaw independently decoded all **45,705,600 RAW samples** and
+matched them to the guest producer buffer; all three embedded JPEG previews
+matched completed encoder outputs. The older preview-only launcher also
+passed three MENU returns with independent LCD pixel comparisons.
+See [capture](docs/capture.md) for reproducible commands and model limits,
+[testing](docs/testing.md) for the evidence, and [service-core events](docs/service-events.md)
+for scheduling assumptions. LCD video frames mean live view, not movie recording.
 
 | Implemented in the experimental profile | Outside the verified scope |
 | --- | --- |
@@ -36,7 +41,8 @@ the scheduling model and its limits.
 | Original menu/shooting tasks with explicit external inputs | Complete MCU, lens, CMOS or GPIO protocol |
 | Static linear RGGB/u16 input and functional NV12/NV16 output | Nikon ISP algorithms, sensor calibration, accurate AE, AF/PDAF |
 | Selected graphics paths, coverage, alpha and LCD scanout | Complete GPU implementation or measured silicon timing |
-| Source drain/acknowledgement and descriptor ownership models | Writing cards, photographs, movie recording or mechanical timing |
+| Shutter/CCOMP peer, full RAW transport, JPEG previews and firmware-written NEF on virtual NVMe/exFAT | Physical CFexpress identity, Nikon RAW compression, movie recording, RAW pre-capture or mechanical timing |
+| Fresh live view after a photo and two post-shot MENU round trips | Indefinite stability, repeated burst capture or physical-camera qualification |
 
 Several resource bodies are missing. The profile supplies small **synthetic
 virtual ROM inputs**, one parameter body derived at runtime from the user's
@@ -57,7 +63,7 @@ git clone https://github.com/WonderLantern/z9-qemu.git
 cd z9-qemu
 sudo apt-get update
 sudo apt-get install build-essential ninja-build patch pkg-config python3-venv \
-    libglib2.0-dev libpixman-1-dev zlib1g-dev libfdt-dev
+    libglib2.0-dev libpixman-1-dev zlib1g-dev libfdt-dev libjpeg-dev exfatprogs
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.txt
@@ -75,6 +81,23 @@ The default input is locally generated color bars with a luminance ramp. To
 use your own image, run `python tools/make_cmos.py --image /path/to/photo.jpg`
 before starting the emulator. The 640×480, 12-bit test input is a convenience;
 it is **not a claim about Z9's physical sensor stream**.
+
+For a full-resolution RAW capture, stop the preview process and use a fresh
+run directory on a Linux filesystem:
+
+```sh
+python -m pip install -r requirements-capture.txt
+python tools/make_cmos.py --width 8256 --height 5504 --bits 14 \
+    --output .local/z9-14bit.raw
+python tools/capture.py --firmware /absolute/path/to/z9-main-payload.bin \
+    --output "$HOME/wonderlantern-z9-runs/capture-001" --audit
+```
+
+This command drives original input contacts, selects the verified RAW profile,
+saves one photograph, waits for fresh live view, opens and returns from two
+menus, then stops QEMU before extracting and auditing its actual NEF. It can
+take several minutes. The browser controls remain preview/menu-only; they
+do not expose shutter release or REC. See [RAW capture](docs/capture.md).
 
 The required extracted MAIN payload is **81,823,629 bytes**, SHA-256:
 

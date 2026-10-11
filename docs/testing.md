@@ -1,5 +1,78 @@
 # Validation status
 
+## Full RAW capture update (2026-10-11)
+
+The current shared Z9 board passed a full shutter/capture/recovery workflow
+in run563: all 57 original input states consumed, one initialized native NEF,
+fresh post-shot RAW/LCD, two actual PHOTO-menu returns and no observed native
+fault. This is a bounded single-shot test; movie recording and RAW pre-capture
+remain unaccepted. The standalone public capture command is checked separately
+below; shared research evidence is not silently counted as package acceptance.
+
+| Check | Result in run563 |
+| --- | --- |
+| Card file | `DCIM/100NCZ_9/DSC_0001.NEF`, 81,222,656 bytes |
+| RAW | 8280×5520, 14-bit; all 45,705,600 independently decoded samples equal guest producer RAM |
+| Embedded JPEG previews | 8256×5504, 1620×1080, 160×120; each byte-identical to its completed codec stream |
+| Post-shot recovery | New RAW and visible LCD frames after image work; two actual menus followed by fresh live view |
+| Original control flow | Request-bound CCOMP reply, GPIO request/feedback/ack and original wait returns observed |
+| Unsupported acceptance | Movie recording, playable video, RAW pre-capture, repeated burst and physical sensor/codec behavior |
+
+Result SHA-256:
+`de87b5f06e4e89913ee4594e7c4368aa62d59d09222f6dc3664dad76823b4c64`.
+Native NEF SHA-256:
+`87fbeba50825a34f513d9215ebe5c9c64b92d8ee246a024504c55e89a63f3a34`.
+Shared tested binary SHA-256:
+`682926d5502d5c24eaa9a52be07e8f388201c17bf076f05e84efdf1495c948b6`.
+The native run took about 309 host seconds plus about 5 seconds for file
+auditing in that environment. This is evidence provenance, not a performance
+guarantee or measured physical camera rate. Artifact sizes/hashes depend on
+the user's input and metadata. Original firmware bytes were unchanged.
+
+The accepted host source was **8256×5504 RGGB/u16 at 14-bit range**, resampled
+by the functional sensor model into the firmware's 8280×5520 RAW request.
+This does not recover physical border pixels or sensor packing. The output
+RAW/file oracle compares the actual producer, not an assumption that the
+input and capture geometries are identical. See [capture.md](capture.md).
+
+The public build passes 13 Python tests (including request-bound CCOMP ACK,
+14-bit range, fresh-frame/all-preview gating and existing-card preservation),
+synthetic C pixel tests, default-off realization and 13 WFE/SEV/IRQ execution
+checks. CI uses only authored/synthetic inputs and cannot establish native
+camera acceptance without the user's firmware.
+
+## Standalone public package acceptance (run564)
+
+The repository's own `tools/capture.py` command, rebuilt from this source
+overlay without the private shared-build launcher or lifecycle plugin,
+passed the same 57-contact complete workflow. It resumed fresh visible
+RAW-derived live view after the photo, recognized two actual PHOTO menus,
+returned to fresh frames, stopped normally and extracted the actual NEF.
+The standalone auditor then independently decoded all 45,705,600 samples
+and matched all three embedded JPEG streams. Final counters were RAW765
+and LCD-video851; counters alone were not the acceptance criterion.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Public tested executable | `18ca5bb07cb514f9c57f78d31f43b9beb1e3566e65d354245961facdf52f9006` |
+| Native result | `f3a3e2d13980c620730f269fd1a1771cf7c70c1b5884a3f25e61da0dc08d1b9b` |
+| Actual 81,222,656-byte NEF | `c138a2a90b0020891f3b9513c6dfef561641472865e57ff6eb4b4dc21831f702` |
+
+Capture and filesystem extraction ran in the authorized Nikon Linux/WSL
+environment. Independent decoding used rawpy0.25.1 / LibRaw0.21.4 in the
+existing Windows Python environment. The tools require no private fixture
+paths; the user supplies firmware and their own local source. Runtime evidence,
+the source photograph, NEF, UI images and memory snapshots are not published.
+After adding the JPEG source license marker, the rebuilt binary hash remained
+identical to the tested executable; no functional code changed.
+
+The repository's full-size synthetic generator also produced the documented
+90,882,080-byte 8256×5504/14-bit source. This generated scene is not the scene
+used for run564; input-generation validation and native image acceptance are
+recorded separately. Small synthetic sources cover range/CFA tests in CI.
+
+## Historical preview-only acceptance (2026-10-10)
+
 The standalone launcher passed three native MENU returns on 2026-10-10,
 with fresh RAW/LCD video and four independent pixel checks. Three preceding
 cold boots of the same functional profile also passed, including a run with
@@ -51,7 +124,9 @@ and a verified upstream build. It cannot boot the camera UI without firmware.
 Do not interpret a green CI badge as camera acceptance.
 
 Remaining physical limits include real CMOS programming, sensor timing,
-calibration, AE/AF/PDAF, recording, storage writing and complete GPU behavior.
+calibration, AE/AF/PDAF, recording, physical card behavior and complete GPU
+behavior. Functional virtual-card writing is now supported by the separate
+capture profile; the historical preview profile still has no card attached.
 
 The current display correction isolates directly enabled NV12 video from the
 two optional layer controls. Ten fixed-pixel checks cover layer combinations,

@@ -73,3 +73,24 @@ Coverage uses a regular sample grid for the observed quality mode. It improves
 edge appearance but is not a measured GPU sample pattern. Alpha is separate
 from color; a zero-alpha black pixel and an opaque black outline have different
 meanings. RGB/BGR ordering is explicitly handled at each boundary.
+
+## Capture, storage and recovery
+
+The separate [capture profile](capture.md) opts into full-frame Bayer transport,
+packed-14 RAW output, neutral NR, cropped NV16 conversion, owned stream and
+thumbnail buffers, and libjpeg encoding. The firmware chooses objects,
+controls submission, receives actual completion and writes the NEF metadata
+and streams. This model is not a Nikon compression or physical ISP implementation.
+
+A DesignWare adapter maps the observed DBI/ATU interface and bounded work/image
+RAM apertures to upstream QEMU PCIe/NVMe. A new sparse exFAT image is the only
+storage destination. Native writes and initialized file contents are checked
+separately; a filesystem entry alone cannot prove a valid photograph.
+
+The MCU peer acknowledges only the observed, complete CCOMP request; the
+request/feedback GPIO device retains normal mask/pending/W1C ownership.
+Source stop resets invalidate old ownership while allowing a complete new
+submission. The secondary source follows its own gate/mode during restart.
+Capture recovery waits for real RAW and all three JPEG completions, fresh
+RAW/LCD frames, actual PHOTO-menu surfaces and fresh frames on each return.
+This avoids accepting exposure-time menus or old visible frames as recovery.

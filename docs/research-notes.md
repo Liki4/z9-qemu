@@ -8,6 +8,23 @@ sample hash, machine options, synthetic inputs and observation method for each.
 Function emulation that seeds RAM and redirects PC can test a packing rule;
 it cannot establish ordinary startup or camera behavior.
 
+The [full RAW capture update](capture.md) adds further separate milestones:
+original key consumption, controller completion, producer/codec completion,
+initialized card sectors, extracted NEF, independent whole-image decode,
+fresh post-shot frames, actual post-shot menus and returned frames. The
+accepted Z9 workflow checks all of these; REC input and LCD video counters
+still cannot establish a saved movie or RAW pre-capture.
+
+Host scene size, requested sensor transport size, cropped JPEG size and LCD
+size are different contracts. The accepted host source is 8256×5504/14-bit,
+the NEF RAW is 8280×5520/14-bit and the main JPEG is 8256×5504. The functional
+model resamples cells; this is not evidence of physical border pixels.
+
+Reuse functional devices and complete workflow recipes across models, but
+revalidate each source gate, descriptor layout, pending bit, callback and
+IRQ. A useful ZR source-completion experiment remains default-off in the
+shared board because partial graph progress is not whole-camera acceptance.
+
 ## Follow data before flags
 
 A command can return success after iterating over an empty transfer table.
