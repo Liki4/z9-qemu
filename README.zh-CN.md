@@ -1,6 +1,6 @@
 # WonderLantern Z9 QEMU
 
-**2026-10-13 development snapshot: shared138.** Latest shared devices and functional lossless14, DSP/mailbox and video backends are included. **Camera H.265/R3D recording remains incomplete.** Previous full capture acceptance does not qualify every new option. See [current snapshot](docs/development-snapshot.md). The standalone ZR companion is [WonderLantern/zr-qemu](https://github.com/WonderLantern/zr-qemu).
+**2026-10-14 开发快照：shared144。** 已同步最新共享输入、所有权、功能 lossless14 及视频模型。**H.265/R3D 相机录像仍未完成。** 旧照片验收不能直接转移到新选项。见 [当前快照](docs/development-snapshot.md) 和 [ZR 仓库](https://github.com/WonderLantern/zr-qemu)。
 
 
 [English](README.md) · [构建](docs/build.md) · [固件输入](docs/firmware.md) · [RAW 拍摄](docs/capture.zh-CN.md) · [原理](docs/architecture.md) · [测试边界](docs/testing.md)
@@ -78,4 +78,6 @@ python tools/capture.py --firmware /绝对路径/z9-main-payload.bin \
 [研究笔记](docs/research-notes.md)记录可跨机型复用的方法；寄存器地址、事件位和
 固件对象布局必须按机型、版本重新建立证据，不能只因共用 EXPEED 便直接套用。
 
-最新共享设备更新、状态查询契约与证据更正见 [shared138 notes](docs/shared138.md)。完整 H.265／R3D 录像与原机算法仍未验收。
+当前 shared144 的共享输入/所有权模型、整轮录像失败结果及复用更正见 [shared144 notes](docs/shared144.md)。H.265／R3D 录像和原机算法仍未验收。
+
+本次共享实现、整轮录像失败结果与复用更正见 [shared144 中文说明](docs/shared144.zh-CN.md)。
