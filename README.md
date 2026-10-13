@@ -1,6 +1,6 @@
 # WonderLantern Z9 QEMU
 
-**2026-10-13 development snapshot: shared136.** Latest shared devices and functional lossless14, DSP/mailbox and video backends are included. **Camera H.265/R3D recording remains incomplete.** Previous full capture acceptance does not qualify every new option. See [current snapshot](docs/development-snapshot.md). The standalone ZR companion is [WonderLantern/zr-qemu](https://github.com/WonderLantern/zr-qemu).
+**2026-10-13 development snapshot: shared138.** Latest shared devices and functional lossless14, DSP/mailbox and video backends are included. **Camera H.265/R3D recording remains incomplete.** Previous full capture acceptance does not qualify every new option. See [current snapshot](docs/development-snapshot.md). The standalone ZR companion is [WonderLantern/zr-qemu](https://github.com/WonderLantern/zr-qemu).
 
 
 [中文](README.zh-CN.md) · [Build](docs/build.md) · [Firmware](docs/firmware.md) · [Usage](docs/usage.md) · [RAW capture](docs/capture.md) · [Architecture](docs/architecture.md) · [Debugging](docs/debugging.md) · [Research notes](docs/research-notes.md) · [Testing](docs/testing.md) · [Publication](docs/publication.md)
@@ -122,3 +122,5 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before attaching logs or creating a PR.
 Runtime folders can contain proprietary bytes even when the repository is
 source-only. Keep them local. Source licensing is GPL-2.0-or-later except as
 documented in upstream licensing notices.
+
+最新共享设备更新、状态查询契约与证据更正见 [shared138 notes](docs/shared138.md)。完整 H.265／R3D 录像与原机算法仍未验收。
