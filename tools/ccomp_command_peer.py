@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-"""Request-bound functional CCOMP peer, Z9 C5.32 functional experiment.
+"""Request-bound functional CCOMP peer, private Z9 C5.32 experiment.
 
 Only the observed family9/type2 command F3 (argument1) is acknowledged.
 The original type3 decoder carries no result payload. This models the MCU

@@ -34,3 +34,5 @@ The allowlist/manifest audit is an additional guard, not an automatic origin
 or licensing determination. Maintainers must manually inspect new arrays,
 fixtures, documentation and imports before refreshing it. A `.py` or `.c`
 extension alone does not establish that a file is safe to publish.
+
+Current development scope and corrected algorithm/movie claims: [2026-10-13 shared136 snapshot](development-snapshot.md). Earlier test results retain their original revision scope.

@@ -68,6 +68,18 @@ if jpeg_line not in body:
     path.write_text(body.replace("hw_arch += {'arm': arm_ss}",
                                  jpeg_line + "hw_arch += {'arm': arm_ss}"))
 
+# Both model repositories use the same EXPEED7 source implementation.
+path = root / 'hw/arm/meson.build'
+body = path.read_text()
+for line in (
+    "arm_ss.add(when: 'CONFIG_NIKON_Z9_LAB', if_true: files('nikon-zr-lab.c'))\n",
+    "arm_ss.add(when: 'CONFIG_NIKON_Z9_LAB', if_true: dependency('x265', required: true))\n",
+    "arm_ss.add(when: 'CONFIG_NIKON_Z9_LAB', if_true: dependency('x264', required: true))\n",
+):
+    if line not in body:
+        body = body.replace("hw_arch += {'arm': arm_ss}", line + "hw_arch += {'arm': arm_ss}")
+path.write_text(body)
+
 # QEMU's TCG GDB removal currently stops at the first CPU without a matching
 # breakpoint. A global SMP breakpoint can be absent on one vCPU after a hit,
 # while still being installed on another. Remove it from every CPU and report

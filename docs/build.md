@@ -53,3 +53,5 @@ libjpeg. `qemu/designware-dma.patch` bounds ATU windows above 4 GiB using the
 base-high and limit-low fields; it does not provide a physical PCIe PHY or
 camera identity. The board exposes only its explicit DMA apertures. All
 overlay headers and upstream patches are fingerprinted in the build receipt.
+
+The shared136 overlay also requires public `libx265-dev` and `libx264-dev`. Both machines are built from the same shared board source. No proprietary codec SDK is used. See [snapshot](development-snapshot.md).

@@ -17,7 +17,7 @@ def attach(g):
     file=g.out/'diagnostic-capture-selector2.bin';file.write_bytes(b'\x01')
     record=dict(classification='explicit missing-ROM selector input; not recovered calibration',
         address='0x47f5af42',bytes=1,hex='01',selector=2,selected_record=1,
-        source_sha256=sha(Path(__file__)),input_origin='declared synthetic selector; not factory calibration',file=file.name,sha256=sha(file),
+        source_sha256=sha(Path(__file__)),input_origin='explicit synthetic selector; not factory calibration',file=file.name,sha256=sha(file),
         original_firmware_unchanged=True,guest_ram_patch=False,cpu_patch=False,
         physical_calibration=False,geometry_verified=False,camera_acceptance=False,
         scope='Select placeholder record1; record body remains missing. Original copy/lookup must be observed.')

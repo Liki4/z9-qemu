@@ -7,8 +7,11 @@ Actual file and full pixel auditing remain separate and mandatory.
 """
 
 
-def image_work(jpeg, side, completed_streams, main_geometry):
+def image_work(jpeg, side, completed_streams, main_geometry, *, baseline=None):
     """Shared whole-image graph, with explicitly supplied model geometry."""
+    if baseline is not None:
+        completed_streams=[entry for entry in completed_streams
+                           if entry['job']>baseline['jpeg_jobs']]
     committed={tuple((r['observation']['jpeg'][k] for k in ('width','height')))
                for r in completed_streams if not r.get('count_only') and
                any(f.get('label')=='encoded' for f in r.get('files',[]))}
@@ -23,7 +26,12 @@ def image_work(jpeg, side, completed_streams, main_geometry):
         # does not establish that the whole image graph is finished.
         'all_nef_previews_committed':{tuple(main_geometry),(1620,1080),(160,120)}<=committed,
     }
+    if baseline is not None:
+        checks['new_raw_capture_acknowledged']=bool(side.get('jobs',0)==baseline['raw_jobs']+1
+            and side.get('acks')==side.get('jobs') and not side.get('pending',True))
+        checks['new_codec_jobs_completed']=jpeg.get('jobs',0)>baseline['jpeg_jobs']
     return dict(ready=all(checks.values()),checks=checks,jpeg_jobs=jpeg.get('jobs'),
+                raw_jobs=side.get('jobs'),baseline=baseline,
                 committed_geometries=sorted(committed),
                 scope='completed image work only; liveview, menu and card acceptance remain separate')
 

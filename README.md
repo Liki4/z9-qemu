@@ -1,5 +1,8 @@
 # WonderLantern Z9 QEMU
 
+**2026-10-13 development snapshot: shared136.** Latest shared devices and functional lossless14, DSP/mailbox and video backends are included. **Camera H.265/R3D recording remains incomplete.** Previous full capture acceptance does not qualify every new option. See [current snapshot](docs/development-snapshot.md). The standalone ZR companion is [WonderLantern/zr-qemu](https://github.com/WonderLantern/zr-qemu).
+
+
 [中文](README.zh-CN.md) · [Build](docs/build.md) · [Firmware](docs/firmware.md) · [Usage](docs/usage.md) · [RAW capture](docs/capture.md) · [Architecture](docs/architecture.md) · [Debugging](docs/debugging.md) · [Research notes](docs/research-notes.md) · [Testing](docs/testing.md) · [Publication](docs/publication.md)
 
 An experimental QEMU 10.2.4 machine for **Nikon Z9 C 5.32**, with a local
@@ -15,7 +18,7 @@ The original UI appears only when you provide the compatible local payload.
 This is a host-side emulator, not a camera-installable modification, a Magic
 Lantern port, or a complete EXPEED hardware specification. It has no USB
 camera access, updater or flashing tool. Z7 is a separate frozen project;
-ZR is not supported by this release. See [NOTICE.md](NOTICE.md).
+Use the separately documented ZR companion for its own inputs and bindings. See [NOTICE.md](NOTICE.md).
 
 ## Current scope
 
@@ -41,7 +44,7 @@ for scheduling assumptions. LCD video frames mean live view, not movie recording
 | Original menu/shooting tasks with explicit external inputs | Complete MCU, lens, CMOS or GPIO protocol |
 | Static linear RGGB/u16 input and functional NV12/NV16 output | Nikon ISP algorithms, sensor calibration, accurate AE, AF/PDAF |
 | Selected graphics paths, coverage, alpha and LCD scanout | Complete GPU implementation or measured silicon timing |
-| Shutter/CCOMP peer, full RAW transport, JPEG previews and firmware-written NEF on virtual NVMe/exFAT | Physical CFexpress identity, Nikon RAW compression, movie recording, RAW pre-capture or mechanical timing |
+| Shutter/CCOMP peer, full RAW transport, JPEG previews and firmware-written NEF on virtual NVMe/exFAT | Physical CFexpress identity, Original Nikon algorithms, accepted movie recording, RAW pre-capture or mechanical timing |
 | Fresh live view after a photo and two post-shot MENU round trips | Indefinite stability, repeated burst capture or physical-camera qualification |
 
 Several resource bodies are missing. The profile supplies small **synthetic
@@ -63,7 +66,7 @@ git clone https://github.com/WonderLantern/z9-qemu.git
 cd z9-qemu
 sudo apt-get update
 sudo apt-get install build-essential ninja-build patch pkg-config python3-venv \
-    libglib2.0-dev libpixman-1-dev zlib1g-dev libfdt-dev libjpeg-dev exfatprogs
+    libglib2.0-dev libpixman-1-dev zlib1g-dev libfdt-dev libjpeg-dev libx265-dev libx264-dev exfatprogs
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.txt

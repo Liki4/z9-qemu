@@ -22,6 +22,12 @@ def validate(binary=None):
 
 def archive(g, manifest):
     (g.out / 'public-build-manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
+    compiled = Path(manifest['binary']).parents[1] / 'qemu-10.2.4/hw/arm'
+    for name, digest in manifest.get('compiled_sources', {}).items():
+        source = compiled / name
+        if sha(source) != digest:
+            raise ValueError('Compiled source changed since build: ' + name)
+        (g.out / name).write_bytes(source.read_bytes())
     g.data['public_build'] = manifest
 
 

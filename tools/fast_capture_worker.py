@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
-"""Headless capture loop with fewer host polls and preview encodes.
+"""Private headless capture loop with fewer host polls and preview encodes.
 
 The original published boot, peers, guest and functional devices are reused.
 No guest instructions, virtual timers, contacts or device flags are altered.

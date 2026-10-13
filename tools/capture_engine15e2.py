@@ -6,10 +6,21 @@ import struct
 from pathlib import Path
 
 
-def observe(guest):
+def observe(guest,driver_address=None):
     row=dict(scope='read-only original15e2 ISR/callback; functional codec units provisional')
     row['jpeg']=json.loads(guest.qmp.command('qom-get',path='/machine',property='engine15e2-jpeg-state'))
-    raw=guest.read_bytes(0xa02808638,40)
+    # ISR entry X0 is the actual original driver. Do not infer a second
+    # object from its neighbor or keep reading port0 after port1 starts.
+    addresses=guest.data.setdefault('engine15e2_observed_drivers',[])
+    address=driver_address if driver_address is not None else (addresses[-1] if addresses else 0xa02808638)
+    if not 0xa00000000<=address<=0xa40000000-40:
+        raise ValueError('Original JPEG driver must remain in bounded RAM')
+    raw=guest.read_bytes(address,40)
+    ident,port,arg,_,_=struct.unpack('<5Q',raw)
+    if port not in (0x15e20000,0x15e21000):
+        raise ValueError('Original JPEG driver port differs from the shared contract')
+    if driver_address is not None and address not in addresses:addresses.append(address)
+    row.update(driver_address=hex(address),descriptor_id=ident,port=hex(port),bank=(port-0x15e20000)//0x1000)
     row['driver_hex']=raw.hex(); arg=struct.unpack_from('<Q',raw,16)[0]
     if 0xa00000000<=arg<=0xa40000000-0xc0:
         packet=guest.read_bytes(arg,0xc0)
@@ -22,11 +33,11 @@ def capture(guest, *, model='zr'):
     report=dict(scope='read-only original driver arguments; physical codec layout/units unproved',model=model,banks=[])
     guest.data['engine15e2_native_observation']=report
     (guest.out/Path(__file__).name).write_bytes(Path(__file__).read_bytes())
-    # Independently observed first driver in both original initializers. The second
-    # is intentionally not inferred from a neighboring ROM descriptor.
-    item=dict(driver_address=hex(0xa02808638));report['banks'].append(item)
-    try:
-        raw=guest.read_bytes(0xa02808638,40);item['driver_hex']=raw.hex()
+    addresses=guest.data.get('engine15e2_observed_drivers') or [0xa02808638]
+    for driver_address in addresses:
+      item=dict(driver_address=hex(driver_address));report['banks'].append(item)
+      try:
+        raw=guest.read_bytes(driver_address,40);item['driver_hex']=raw.hex()
         ident,port,arg0,arg1,flags=struct.unpack('<5Q',raw)
         item.update(descriptor_id=ident,port=hex(port),flags=hex(flags))
         for name,address in [('program0',arg0),('program1',arg1)]:
@@ -39,10 +50,17 @@ def capture(guest, *, model='zr'):
             if 0xa00000000<=target<=0xa40000000-0x40:
                 item[name+'_image_descriptor_address']=hex(target)
                 item[name+'_image_descriptor_hex']=guest.read_bytes(target,0x40).hex()
-    except Exception as exc:item['capture_error']=repr(exc)
+      except Exception as exc:item['capture_error']=repr(exc)
     state=json.loads(guest.qmp.command('qom-get',path='/machine',property='engine15e2-jpeg-state'))
     report['jpeg']=state
-    fields=json.loads(guest.qmp.command('qom-get',path='/machine',property='engine15e2-config-state'))['banks'][0]['fields']
+    bank=0
+    if guest.data.get('engine15e2_observed_drivers'):
+        bank=observe(guest)['bank']
+    elif guest.data.get('probe_arguments',{}).get('capture_transition_batch'):
+        ports=json.loads(guest.qmp.command('qom-get',path='/machine',property='engine15e2-alternate-bank-state'))
+        bank=ports['active_bank']
+        report['configured_request_bank_source']='actual shared codec active-bank state'
+    fields=json.loads(guest.qmp.command('qom-get',path='/machine',property='engine15e2-config-state'))['banks'][bank]['fields']
     current=dict(width=fields[0x418//4],height=fields[0x41c//4],y_stride=fields[0x410//4],
         uv_stride=fields[0x414//4],y=fields[0x430//4]<<4,uv=fields[0x434//4]<<4,
         output=fields[0x440//4]<<4,capacity=fields[0x458//4]*512,core_control=fields[0x404//4])

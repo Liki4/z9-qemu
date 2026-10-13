@@ -14,29 +14,8 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = 'publication-manifest.json'
-FILES = {'tools/service_z9_mcu.py', 'docs/build.md', 'tools/z9_primary_gate_input.py', 'qemu/nikon-raw-pixels.h', 'tools/mcu_frames.py', 'tools/probe.py', 'docs/firmware.md', 'tools/observe_serial_channel.py', 'tools/interactive.html', 'tools/smoke_qemu.py', 'tools/init_table_input.py', 'tools/z9_global1_boundary_input.py', 'tools/guest.py', 'tools/probe_adc_capture.py', 'tools/probe_tasks.py', 'tools/receive_mcu_tx.py', 'tools/service_serial8.py', 'tools/z9_processing_index_input.py', 'tools/make_cmos.py', 'requirements.txt', 'docs/publication.md', 'docs/testing.md', 'tools/observe_z9_state8.py', 'docs/research-notes.md', '.gitattributes', 'tools/parameter_input.py', 'tools/guest_transport.py', 'tools/audit_publication.py', 'docs/usage.md', 'NOTICE.md', 'tools/deliver_mcu_frame.py', 'LICENSES/QEMU-LICENSE.txt', 'README.md', 'README.zh-CN.md', 'tools/boot.py', 'tools/model-properties.json', 'tools/run.py', 'qemu/prepare_source.py', '.github/workflows/ci.yml', 'COPYING', 'tests/test_inputs.py', 'docs/debugging.md', 'tools/build.py', 'tools/probe_graphics_image.py', 'qemu/nikon-z9-lab.c', 'tools/z9_sequence_resource_input.py', '.gitignore', 'tests/test_pixels.c', 'docs/architecture.md', 'CONTRIBUTING.md', 'tests/run.sh', 'qemu/nikon-z9-pixels.h'}
+FILES = {'tools/mcu_frames.py', 'tools/capture_engine153.py', 'tools/z9_quality_input.py', 'qemu/nikon-wave5-codec.h', 'tools/service_serial8.py', 'tools/extract_virtual_exfat.py', 'tools/native_menu_screen.py', 'tools/capture_engine15e2.py', 'qemu/nikon-z9-d980.h', 'tools/ccomp_command_peer.py', 'tools/private_bounded_qmp.py', 'tools/capture_support.py', 'tools/model-properties.json', 'tools/capture_nv16_pipeline.py', 'tools/guest.py', 'NOTICE.md', 'tools/inspect_virtual_exfat.py', 'tools/capture_workflow_ready.py', 'qemu/nikon-z9-thumbnail-nv16.h', 'qemu/prepare_source.py', 'tools/build.py', 'tests/test_pixels.c', 'qemu/nikon-raw-pixels.h', 'tools/probe.py', '.gitattributes', 'docs/capture.zh-CN.md', 'tools/capture_jpeg_completed.py', 'COPYING', 'LICENSES/QEMU-LICENSE.txt', 'tools/capture-profile.json', 'tools/capture_engine151_pixels.py', 'tools/run.py', 'qemu/nikon-z9-pcie.h', 'docs/service-events.md', 'tools/boot.py', 'tools/guest_transport.py', 'tools/z9_processing_index_input.py', 'tools/audit_publication.py', 'tools/observe_z9_state8.py', 'tools/make_cmos.py', 'docs/build.md', 'source-snapshot.json', 'tools/deliver_mcu_frame.py', 'tools/capture-lossless14-profile.json', 'tools/capture_native_image_arguments.py', 'tools/z9_sequence_resource_input.py', 'tools/capture_recovery_flow.py', 'tests/test_capture_contracts.py', 'tools/capture_engine153_layout.py', 'tools/service_z9_mcu.py', 'tools/virtual_recording_card.py', 'tests/run.sh', 'tools/capture_sequence.py', 'requirements.txt', 'tools/parameter_input.py', 'tools/rtc_mcu_input.py', 'qemu/nikon-expeed-dsp-boot.h', 'tools/capture_virtual_ram.py', 'qemu/arm-service-events.patch', 'tools/nef_codec_profile.py', 'tools/capture_repeat_flow.py', 'README.md', 'tools/z9_global1_boundary_input.py', 'qemu/nikon-zr-lab.c', 'docs/firmware.md', '.gitignore', 'qemu/designware-dma.patch', 'tools/capture_processing_input.py', 'qemu/nikon-expeed-correction.h', 'requirements-capture.txt', 'qemu/nikon-z9-wave5.h', 'tools/check_service_events.py', 'tools/capture_readiness.py', 'docs/research-notes.md', 'tools/z9_timing_input.py', 'tools/capture_engine152c.py', 'tools/z9_primary_gate_input.py', 'tools/receive_mcu_tx.py', 'docs/usage.md', 'docs/architecture.md', 'qemu/nikon-expeed-motion.h', 'tools/capture_thumbnail_nv16.py', 'qemu/nikon-z9-lab.c', 'qemu/nikon-z9-capture-nv16.h', 'tools/fast_capture_worker.py', 'README.zh-CN.md', 'tools/probe_graphics_image.py', 'docs/debugging.md', '.github/workflows/ci.yml', 'tools/probe_adc_capture.py', 'tests/test_inputs.py', 'tools/z9_exposure_input.py', 'tools/interactive.html', 'tools/observe_serial_channel.py', 'tools/init_table_input.py', 'tools/audit_native_nef.py', 'docs/capture.md', 'qemu/nikon-z9-pixels.h', 'tools/smoke_qemu.py', 'tools/export_card.py', 'tools/native_log_guard.py', 'qemu/nikon-z9-jpeg.h', 'docs/testing.md', 'tools/capture_frame_conversion.py', 'tools/z9_navigation_input.py', 'docs/publication.md', 'tools/capture.py', 'tools/audit_repeated_capture.py', 'qemu/nikon-expeed-lossless.h', 'CONTRIBUTING.md', 'docs/development-snapshot.md', 'tools/probe_tasks.py', 'tools/validate_run.py', 'tools/capture_thumbnail_route.py', 'qemu/nikon-z9-video-raw.h'}
 IGNORED = {'.git','.local','.build','.venv','__pycache__'}
-FILES.add('tools/validate_run.py')
-FILES.update({'qemu/arm-service-events.patch','tools/z9_timing_input.py',
-              'tools/check_service_events.py','docs/service-events.md'})
-FILES.update({
-    'qemu/designware-dma.patch', 'qemu/nikon-z9-pcie.h', 'qemu/nikon-z9-d980.h',
-    'qemu/nikon-z9-jpeg.h', 'qemu/nikon-z9-capture-nv16.h', 'qemu/nikon-z9-thumbnail-nv16.h',
-    'tools/audit_native_nef.py', 'tools/capture_engine151_pixels.py', 'tools/capture_engine152c.py',
-    'tools/capture_engine153.py', 'tools/capture_engine153_layout.py', 'tools/capture_engine15e2.py',
-    'tools/capture_frame_conversion.py', 'tools/capture_jpeg_completed.py',
-    'tools/capture_native_image_arguments.py', 'tools/capture_nv16_pipeline.py',
-    'tools/capture_processing_input.py', 'tools/capture_readiness.py', 'tools/capture_recovery_flow.py',
-    'tools/capture_thumbnail_nv16.py', 'tools/capture_thumbnail_route.py', 'tools/capture_virtual_ram.py',
-    'tools/capture_workflow_ready.py', 'tools/ccomp_command_peer.py', 'tools/extract_virtual_exfat.py',
-    'tools/fast_capture_worker.py', 'tools/inspect_virtual_exfat.py', 'tools/native_log_guard.py',
-    'tools/native_menu_screen.py', 'tools/private_bounded_qmp.py', 'tools/capture_sequence.py',
-    'tools/rtc_mcu_input.py', 'tools/virtual_recording_card.py', 'tools/z9_exposure_input.py',
-    'tools/z9_navigation_input.py', 'tools/z9_quality_input.py', 'tools/capture_support.py',
-    'tools/capture.py', 'tools/export_card.py', 'tools/capture-profile.json',
-    'requirements-capture.txt', 'tests/test_capture_contracts.py',
-    'docs/capture.md', 'docs/capture.zh-CN.md',
-})
 SECRET_PATTERNS = [
     re.compile(r'gh[opusr]_[A-Za-z0-9]{30,}'),
     re.compile(r'github_pat_[A-Za-z0-9_]{30,}'),
@@ -45,7 +24,7 @@ SECRET_PATTERNS = [
 
 def validate(path, data):
     if path not in FILES | {MANIFEST}: raise ValueError('Unreviewed public path: '+path)
-    if len(data)>(1024*1024 if path == 'qemu/nikon-z9-lab.c' else 512*1024) or b'\0' in data: raise ValueError('Unexpected binary/large content: '+path)
+    if len(data)>(2*1024*1024 if path == 'qemu/nikon-z9-lab.c' else 512*1024) or b'\0' in data: raise ValueError('Unexpected binary/large content: '+path)
     text = data.decode('utf-8')
     if any(pattern.search(text) for pattern in SECRET_PATTERNS): raise ValueError('Credential pattern in '+path)
     if re.search(r"['\"][0-9a-fA-F]{512,}['\"]",text): raise ValueError('Large embedded hex data needs review: '+path)

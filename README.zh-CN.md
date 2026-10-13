@@ -1,5 +1,8 @@
 # WonderLantern Z9 QEMU
 
+**2026-10-13 development snapshot: shared136.** Latest shared devices and functional lossless14, DSP/mailbox and video backends are included. **Camera H.265/R3D recording remains incomplete.** Previous full capture acceptance does not qualify every new option. See [current snapshot](docs/development-snapshot.md). The standalone ZR companion is [WonderLantern/zr-qemu](https://github.com/WonderLantern/zr-qemu).
+
+
 [English](README.md) · [构建](docs/build.md) · [固件输入](docs/firmware.md) · [RAW 拍摄](docs/capture.zh-CN.md) · [原理](docs/architecture.md) · [测试边界](docs/testing.md)
 
 本项目提供 QEMU 10.2.4 的实验性 Z9 C 5.32 板级模型、极简本地网页控制器，

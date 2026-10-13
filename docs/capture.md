@@ -121,3 +121,29 @@ for pre-capture remain a research direction, not a shipped feature.
 ZR-specific source/ISP completion experiments remain default-off in the
 shared board; they are not part of the accepted Z9 recipe and do not make ZR
 supported by this repository. Z7 is unchanged.
+
+
+## Current opt-in lossless14 / repeated-photo workflow
+
+The shared136 snapshot also includes the newer two-photo workflow:
+
+```sh
+python tools/capture.py --firmware /absolute/path/to/z9-main-payload.bin \
+    --raw .local/z9-14bit.raw --profile lossless14 \
+    --output "$HOME/wonderlantern-z9-runs/lossless14-001" --audit
+```
+
+This drives two complete released-shutter/menu/live-view cycles. The open-source
+F0 lossless14 entropy encoder consumes actual guest Bayer data; it is not
+Nikon microcode, HE/HE*, continuous burst or pre-capture. `--audit` extracts and
+independently decodes every actual NEF, matches every RAW sample and each
+photo's completed JPEG jobs, and requires post-shot/menu recovery. The older
+default compatibility profile remains one photo and is transport evidence;
+its packed-size fallback is not F0 entropy-codec acceptance.
+
+The research two-model whole-file result is described in the current snapshot.
+The public host port must be qualified separately after substantive changes;
+source compilation and synthetic tests do not establish native camera success.
+ZR uses `tools/run_zr.py --profile photo` and its own private inputs. After a
+stopped successful ZR run, audit `capture-card.raw` with the virtual-card helper,
+save a read-only catalog, then run `tools/audit_repeated_capture.py --output RUN`.

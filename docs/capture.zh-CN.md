@@ -84,3 +84,5 @@ Compression=34713 标签及 LibRaw 能解码，不代表已实现尼康无损或
 共享代码里的 ZR 源/ISP 完成实验默认关闭，不在 Z9 验收配置中；本仓库仅支持指定
 Z9 固件。Z7 保持现状。新机型可复用设备与验收框架，但地址、位图、IRQ、布局和
 完整生命周期必须按自己的固件验证。
+
+当前 shared136 开发快照增加 `--profile lossless14 --audit`：两次释放快门的整轮照片／菜单恢复与每张 NEF 全像素独立审计。默认 compatibility 配置保持此前传输验证范围，不等于 F0 压缩算法验收。详见 [英文更新](capture.md) 和 [当前快照限制](development-snapshot.md)。

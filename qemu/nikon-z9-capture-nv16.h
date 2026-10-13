@@ -173,10 +173,10 @@ static void capture_nv16_try(NikonZ9State *s)
         s->capture_nv16_jobs, y, uv, s->capture_nv16_y[0], s->capture_nv16_uv[0], w, h);
 }
 
-static int capture_nv16_jpeg_owner(NikonZ9State *s)
+static int capture_nv16_jpeg_owner(NikonZ9State *s, unsigned bank)
 {
     if (!s->capture_nv16_model || !s->capture_nv16_jobs) { return -1; }
-    const uint32_t *c = s->engine15e2_config[0];
+    const uint32_t *c = s->engine15e2_config[bank];
     for (unsigned j = 0; j < 3; j++) {
         if (s->capture_nv16_jpeg_consumed[j] != s->capture_nv16_jobs &&
             c[0x418 / 4] == s->capture_nv16_w[j] && c[0x41c / 4] == s->capture_nv16_h[j] &&

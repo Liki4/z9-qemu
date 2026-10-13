@@ -147,3 +147,5 @@ instruction-clock, virtual-input and synthetic-timing profile passes the
 three-return acceptance above. The historical failing observations remain
 valid evidence for the earlier profiles; no single component is claimed as
 an independently proved cure for every lifetime failure.
+
+Current development scope and corrected algorithm/movie claims: [2026-10-13 shared136 snapshot](development-snapshot.md). Earlier test results retain their original revision scope.

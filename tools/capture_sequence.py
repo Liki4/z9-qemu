@@ -3,16 +3,17 @@
 
 This bounded diagnostic records original key-consumer calls/returns and LCD
 frames. Key delivery is not capture completion or evidence of a saved file.
-The standalone runner and boot fixtures are reused. See docs/capture.md.
+Uses the standalone runner and explicit local firmware/RAW inputs.
 """
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
 import struct
 import sys
 import time
-from capture_support import HERE,PUBLIC,validate,archive,output_path
+from capture_support import HERE,PUBLIC,validate,archive
 
 CONSUMER=0x40d2939c
 
@@ -23,6 +24,8 @@ def main():
     ap.add_argument('--fast-capture',action='store_true',
                     help='retain original contact checks and capture observations; compact preparation snapshots and checkpoint every8 contacts')
     ap.add_argument('--sequence',choices=('shutter','movie'),default='shutter')
+    ap.add_argument('--capture-count',type=int,default=1,choices=range(1,9),
+                    help='repeat complete external shutter/recovery cycles in the same guest/card; not burst mode')
     ap.add_argument('--exposure-mode-steps',type=int,default=0,choices=range(-3,4),
                     help='external MODE/main-dial steps after preparation; verify actual native LCD')
     ap.add_argument('--exposure-shutter-steps',type=int,default=0,choices=range(-64,65),
@@ -60,6 +63,7 @@ def main():
     ap.add_argument('--engine1540-parameters',action='store_true',help='original sparse1540 main parameters/LUT; requires descriptors; data/results/IRQ unsupported')
     ap.add_argument('--engine1540-control',action='store_true',help='original1540 subscription/interface and emptyW1C; requires parameters; data8 stays strict')
     ap.add_argument('--engine1540-frame-pass',action='store_true',help='neutral actual151 full RAW RAM transport, normal bit8 completion; LUT/codec unverified')
+    ap.add_argument('--raw-lossless14',action='store_true',help='explicit attributed F0 entropy encoding of actual151 packed RAW DMA; physical codec unverified')
     ap.add_argument('--primary-reset-parameter-retention',action='store_true',help='retain alreadyconfigured upper/E parameter validity across bounded reset; physical reset semantics unverified')
     ap.add_argument('--primary20-empty-reset',action='store_true',help='observed original RAW logical20 reset; no processing/completion')
     ap.add_argument('--icount-shift',type=int,choices=range(4),default=0,help='explicit functional virtual CPU rate; physical timing remains unverified')
@@ -130,13 +134,17 @@ def main():
     ap.add_argument('--raw',type=Path,required=True)
     ap.add_argument('--qemu',type=Path)
     ap.add_argument('--output',type=Path,required=True)
-    args=ap.parse_args();args.output=output_path(args.output);args.lifecycle_observer=None;manifest=validate(args.qemu)
+    args=ap.parse_args();args.lifecycle_observer=None;manifest=validate(args.qemu)
     from z9_navigation_input import parse_actions
     try:menu_actions=parse_actions(args.menu_actions)
     except ValueError as error:ap.error(str(error))
     if args.menu_only and not menu_actions:ap.error('menu-only requires navigation actions')
     if args.finish_on_fresh_liveview and not (args.post_capture_recovery and args.post_capture_ready_menu):
         ap.error('fresh-frame completion requires the two post-shot menu readiness gates')
+    if args.capture_count > 1 and not (args.finish_on_fresh_liveview and args.post_capture_ready_menu and args.post_capture_recovery):
+        ap.error('repeated photos require completed image work, actual post-shot menus and fresh liveview gates')
+    if args.capture_count > 1 and not (args.engine153_inplace_identity and args.engine151_raw_output and args.d980_stream and args.nvme_card):
+        ap.error('repeated RAW photos require fresh full DMA, neutral NR, actual RAW output and one owned virtual card')
     if args.post_capture_recovery and (args.menu_only or args.navigation_file or args.sequence!='shutter'):
         ap.error('post-capture recovery requires a fixed shutter recipe')
     if (args.post_capture_recovery or args.trace_capture_recovery) and not args.trace_app_keys:
@@ -155,6 +163,7 @@ def main():
     if args.engine1544_neutral_copy and not (args.engine1544_config and args.trace_engine1544_input):ap.error('1544 copy requires config and actual input observer')
     if args.engine1540_control and not args.engine1540_parameters:ap.error('1540 control requires main parameters')
     if args.engine1540_frame_pass and not (args.engine1540_control and args.engine151_raw_output):ap.error('1540 frame transport requires control and actual151 RAW side output')
+    if args.raw_lossless14 and not args.engine1540_frame_pass:ap.error('F0 lossless14 requires actual RAW request/producer ownership')
     if args.trace_engine15e2_input and not args.engine15e2_jpeg:ap.error('JPEG input observer requires JPEG model')
     if not args.name.startswith('z9-') or not args.name.replace('-','').isalnum():ap.error('fresh z9- name required')
     if not 15<=args.seconds<=600:ap.error('bounded 15..600 seconds required')
@@ -229,6 +238,8 @@ def main():
                 self.command[self.command.index('-M')+1]+=',engine152c-request-model=on'
             if args.engine151_raw_output:
                 self.command[self.command.index('-M')+1]+=',engine151-raw-output-model=on'
+            if args.capture_count > 1:
+                self.command[self.command.index('-M')+1]+=',engine153-alternate-bank-model=on,capture-stream-rearm-model=on,engine1540-alternate-bank-model=on,engine15e2-alternate-bank-model=on'
             if args.engine1544_config:
                 self.command[self.command.index('-M')+1]+=',engine1544-config-model=on'
             if args.engine1544_neutral_copy:
@@ -241,6 +252,8 @@ def main():
                 self.command[self.command.index('-M')+1]+=',engine1540-control-model=on'
             if args.engine1540_frame_pass:
                 self.command[self.command.index('-M')+1]+=',engine1540-frame-pass-model=on'
+            if args.raw_lossless14:
+                self.command[self.command.index('-M')+1]+=',engine1540-lossless14-model=on'
             if args.primary_reset_parameter_retention:
                 self.command[self.command.index('-M')+1]+=',primary-stopped-source-reset-model=on,primary-reset-parameter-retention-model=on'
             if args.primary20_empty_reset:
@@ -304,7 +317,7 @@ def main():
             (self.out/Path(__file__).name).write_bytes(Path(__file__).read_bytes())
             self.data['capture_recording_acceptance']=False
             if args.lifecycle_observer:
-                raise ValueError('Native lifecycle plugins are outside this standalone tool')
+                raise ValueError('Standalone Z9 tool does not load private lifecycle plugins')
 
         def __exit__(self,kind,error,traceback):
             snapshot_error=None
@@ -379,6 +392,11 @@ def main():
             if args.engine153_inplace_identity and self.qmp and self.proc and self.proc.poll() is None:
                 self.qmp.command('stop')
                 self.data['engine153_inplace_identity_final']=runner.state(self,'engine153-inplace-identity-state')
+                if args.capture_count > 1:
+                    self.data['engine153_alternate_bank_final']=runner.state(self,'engine153-alternate-bank-state')
+                    self.data['capture_stream_rearm_final']=runner.state(self,'capture-stream-rearm-state')
+                    self.data['engine1540_alternate_bank_final']=runner.state(self,'engine1540-alternate-bank-state')
+                    self.data['engine15e2_alternate_bank_final']=runner.state(self,'engine15e2-alternate-bank-state')
             if args.engine15e2_config and self.qmp and self.proc and self.proc.poll() is None:
                 self.qmp.command('stop')
                 self.data['engine15e2_config_final']=runner.state(self,'engine15e2-config-state')
@@ -502,6 +520,13 @@ def main():
                 scope=('native key consumer and return with fresh host-formatted virtual card' if args.nvme_card
                     else 'native key consumer and return only; no card attached'))
             self.g.data['capture_sequence']=self.capture
+            self.capture_cycle=1
+            self.capture_baseline=None
+            if args.capture_count > 1:
+                self.capture['repeated_capture']=dict(requested=args.capture_count,completed=[],
+                    all_cycles_recovered=False,all_files_accepted=False,burst_mode_verified=False,
+                    scope='repeated released shutter cycles in one guest/card; continuous burst remains separate')
+                (self.g.out/'capture_repeat_flow.py').write_bytes((HERE/'capture_repeat_flow.py').read_bytes())
             self.capture['post_capture_recovery']=dict(enabled=args.post_capture_recovery,
                 start_state=self.post_capture_start,settle_before_seconds=10,
                 wait_for_completed_capture=args.post_capture_ready_menu,
@@ -904,24 +929,31 @@ def main():
                         record['engine151_pixels_observation']=observe(self.g,model='z9')
                         if label.endswith('capture151_isr_after_w1c'):
                             side=record['engine151_pixels_observation'].get('raw_side',{})
-                            if side.get('jobs')==1 and not self.g.data.get('raw_side_native_dump'):
-                                amount=side['bytes']
-                                if not 0<amount<=128*1024*1024:raise ValueError('bounded actual RAW side dump required')
+                            job=side.get('jobs',0)
+                            previous=self.g.data.setdefault('raw_side_native_dumps',[])
+                            if job and not any(entry['job']==job for entry in previous):
+                                from capture_repeat_flow import raw_dump_span
+                                amount=raw_dump_span(side,previous)
                                 files={}
                                 for key in ('source','target'):
-                                    path=self.g.out/('engine151-raw-side-'+key+'.bin')
+                                    prefix='engine151-raw-side-' if job==1 else 'engine151-raw-side-job'+str(job)+'-'
+                                    path=self.g.out/(prefix+key+'.bin')
+                                    if path.exists():raise ValueError('Preserve each actual RAW producer snapshot')
                                     reply=self.g.qmp.hmp(f'pmemsave {side[key]:#x} {amount:#x} "{path}"')
                                     if reply:raise RuntimeError(reply)
                                     files[key]=path.name
-                                self.g.data['raw_side_native_dump']=dict(bytes=amount,files=files,
+                                entry=dict(job=job,cycle=self.capture_cycle,bytes=amount,files=files,state=side,
                                     scope='actual complete RAM at original ISR afterW1C, before original callback; not native file')
+                                previous.append(entry)
+                                if job==1:self.g.data['raw_side_native_dump']=entry
                             callback=regs['X02']
                             if not 0x40160000<=callback<0x41600000 or callback&3:
                                 raise ValueError('native151 callback outside original executable prefix')
                             if callback not in self.points:self.arm(callback,'capture_app_capture151_callback')
                     if label.startswith('capture_app_capture15e2_'):
                         from capture_engine15e2 import observe
-                        item=observe(self.g);record['engine15e2_observation']=item
+                        item=observe(self.g,driver_address=regs['X00'] if label.endswith('capture15e2_isr') else None)
+                        record['engine15e2_observation']=item
                         if args.engine15e2_deferred_input:
                             record['engine15e2_deferred_input']=runner.state(self.g,'engine15e2-deferred-input-state')
                         if args.trace_engine15e2_input and label.endswith('capture15e2_wait_failure'):
@@ -976,7 +1008,7 @@ def main():
                                         record['source_context_frames'].append(entry)
                             record['scope']='read-only original request/caller; buffer producer remains unproved'
                         if args.trace_engine15e2_input and label.endswith('capture15e2_start'):
-                            config=runner.state(self.g,'engine15e2-config-state')['banks'][0]['fields']
+                            config=runner.state(self.g,'engine15e2-config-state')['banks'][item['bank']]['fields']
                             width,height,stride=config[0x418//4],config[0x41c//4],config[0x410//4]
                             if not 0<width<=16384 or not 0<height<=8192 or not width<=stride<=32768:
                                 raise ValueError('bounded actual JPEG input geometry required')
@@ -1247,6 +1279,25 @@ def main():
                         raw_frames=raw['frames'],released_raw_frames=released['raw']['frames'],
                         lcd_video_frames=lcd['video_frames'],virtual_ns=virtual)
                     if ready:
+                        if args.capture_count > 1:
+                            from capture_repeat_flow import completed, recovery as new_recovery
+                            final=self.snapshot('capture-cycle-'+str(self.capture_cycle)+'-recovered')
+                            self.capture['repeated_capture']['completed'].append(completed(
+                                self.capture_cycle,self.capture_baseline,recovery,final,self.index))
+                            print('Whole native photo cycle recovered: '+str(self.capture_cycle),flush=True)
+                            if self.capture_cycle < args.capture_count:
+                                from capture_recovery_flow import recovery_states
+                                self.preparation_prefix=len(self.states)
+                                self.states += [dict(row) for row in self.contact_states]
+                                self.post_capture_start=len(self.states)
+                                self.states += recovery_states()
+                                self.capture['post_capture_recovery']=new_recovery(self.post_capture_start)
+                                self.capture_cycle+=1
+                                self.capture_baseline=None
+                                self.capture['all_inputs_consumed']=False
+                                self.next_virtual=virtual+500000000
+                                return False
+                            self.capture['repeated_capture']['all_cycles_recovered']=True
                         self.capture['settled_after_contacts']=True
                         session.stop.set()
                     return False
@@ -1304,6 +1355,15 @@ def main():
                     runner.state(self.g,'engine151-raw-output-state'),
                     self.g.data.get('jpeg_completed_native_dumps',[]))
                 receipt['virtual_ns']=virtual
+                if args.capture_count > 1:
+                    from capture_repeat_flow import ready as repeat_ready
+                    receipt=repeat_ready(released,
+                        runner.state(self.g,'raw-pipeline-state'),
+                        runner.state(self.g,'engine1548-scanout-state'),
+                        runner.state(self.g,'engine15e2-jpeg-state'),
+                        runner.state(self.g,'engine151-raw-output-state'),
+                        self.g.data.get('jpeg_completed_native_dumps',[]),self.capture_baseline)
+                    receipt['virtual_ns']=virtual
                 prior=self.capture['post_capture_recovery'].get('ready_gate',{})
                 if receipt['ready']:
                     first=prior.get('first_ready_virtual_ns',virtual)
@@ -1337,6 +1397,12 @@ def main():
                         3,bit,'0xd15100c',(0,bit,intid),0x40fd9518):
                         raise ValueError('current native shutter GPIO binding differs from run446')
             row=dict(self.states[self.index],queued_virtual_ns=virtual,consumer_returned=False)
+            if args.capture_count > 1 and self.index==self.preparation_prefix and self.capture_baseline is None:
+                self.capture_baseline=dict(
+                    raw_jobs=runner.state(self.g,'engine151-raw-output-state')['jobs'],
+                    jpeg_jobs=runner.state(self.g,'engine15e2-jpeg-state')['jobs'],
+                    start_contact=self.index,virtual_ns=virtual)
+            row['capture_cycle']=self.capture_cycle
             self.capture['inputs'].append(row);self.active=row
             self.arm(CONSUMER,'capture_key_consumer')
             if args.trace_app_keys:
@@ -1396,25 +1462,21 @@ def main():
 
     runner.Guest=CaptureGuest;runner.Peer=CapturePeer
     output=args.output.resolve()
-    options=argparse.Namespace(firmware=args.firmware,
-        qemu=Path(manifest['binary']),raw=args.raw,
-        output=output,seconds=args.seconds,menu_test=False)
+    options=argparse.Namespace(firmware=args.firmware,qemu=Path(manifest['binary']),
+        raw=args.raw,output=output,seconds=args.seconds,menu_test=False)
     session=runner.Session()
     if args.fast_capture:
         from fast_capture_worker import worker
         worker(options,session,runner)
-    else:
-        runner.worker(options,session)
+    else:runner.worker(options,session)
     record=json.loads((output/'result.json').read_text())
-    recovery=record.get('capture_sequence',{}).get('post_capture_recovery',{})
+    sequence=record.get('capture_sequence',{})
+    recovery=sequence.get('post_capture_recovery',{})
     print(json.dumps(dict(error=record.get('error'),result=str(output/'result.json'),
-        contacts_consumed=record.get('capture_sequence',{}).get('all_inputs_consumed',False),
+        contacts_consumed=sequence.get('all_inputs_consumed',False),
         two_postshot_menus=bool(recovery.get('two_menu_roundtrips_verified')),
-        file_and_pixel_audit_required=True)))
-    if record.get('error') or not record.get('capture_sequence',{}).get('all_inputs_consumed'):
-        raise SystemExit(1)
-    if args.post_capture_ready_menu and not recovery.get('two_menu_roundtrips_verified'):
-        raise SystemExit(1)
-
+        repeated_recovery=sequence.get('repeated_capture'),file_and_pixel_audit_required=True)))
+    if record.get('error') or not sequence.get('all_inputs_consumed'):raise SystemExit(1)
+    if args.post_capture_ready_menu and not recovery.get('two_menu_roundtrips_verified'):raise SystemExit(1)
 
 if __name__=='__main__':main()

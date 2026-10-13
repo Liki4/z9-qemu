@@ -94,6 +94,7 @@ static uint8_t *primary_d980_pack14(const NikonRawPixels *p,
 
 static bool primary_d980_receive(NikonZ9State *s, bool single_input)
 {
+    if (video_raw_descriptor(s)) { return !single_input && video_raw_receive(s); }
     if (!s->primary_d980_stream_model || (!single_input && !s->event_timing_active) ||
         s->primary_reset_stage || !(s->engine150c_active & 0x4000) ||
         (s->engine_150c_init[0x18 / 4] & 0x4000) || s->primary_d980_pending) {
@@ -146,7 +147,7 @@ static bool primary_d980_receive(NikonZ9State *s, bool single_input)
 
 static void primary_d980_tick(NikonZ9State *s)
 {
-    primary_d980_receive(s, false);
+    if (!primary_d980_finite_input_owned(s)) { primary_d980_receive(s, false); }
 }
 
 static void primary_d980_single_cancel(NikonZ9State *s)
@@ -163,7 +164,8 @@ static void primary_d980_single_tick(void *opaque)
     NikonZ9State *s = opaque;
     if (!s->primary_d980_single_armed) { return; }
     if (s->primary_reset_stage || !(s->engine150c_active & 0x4000) ||
-        s->event_timing_active || ++s->primary_d980_single_attempts > 64) {
+        (s->event_timing_active && !s->primary_d980_live_single_model) ||
+        ++s->primary_d980_single_attempts > 64) {
         primary_d980_single_cancel(s);
         return;
     }
@@ -214,7 +216,7 @@ static void primary_d980_single_mode(NikonZ9State *s, unsigned channel,
                                     uint32_t previous, uint32_t value)
 {
     if (!s->primary_d980_single_model || channel || previous != 2 || value != 3 ||
-        s->primary_reset_stage || s->event_timing_active) {
+        s->primary_reset_stage || (s->event_timing_active && !s->primary_d980_live_single_model)) {
         return;
     }
     if (!(s->engine150c_active & 0x4000)) {

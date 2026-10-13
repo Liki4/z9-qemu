@@ -96,3 +96,5 @@ Build public releases from an explicit source inventory and fresh Git history.
 Review code for embedded program/table bytes even if all filenames are text.
 Generate synthetic inputs or derive necessary defaults from the user's local
 firmware at runtime. Audit all refs and staged blobs, not only the visible tree.
+
+Current development scope and corrected algorithm/movie claims: [2026-10-13 shared136 snapshot](development-snapshot.md). Earlier test results retain their original revision scope.

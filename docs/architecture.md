@@ -94,3 +94,5 @@ submission. The secondary source follows its own gate/mode during restart.
 Capture recovery waits for real RAW and all three JPEG completions, fresh
 RAW/LCD frames, actual PHOTO-menu surfaces and fresh frames on each return.
 This avoids accepting exposure-time menus or old visible frames as recovery.
+
+Current development scope and corrected algorithm/movie claims: [2026-10-13 shared136 snapshot](development-snapshot.md). Earlier test results retain their original revision scope.

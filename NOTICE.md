@@ -17,3 +17,5 @@ mistaken for recovered factory data or a hardware specification.
 The overlay/tools use GPL-2.0-or-later. QEMU retains its upstream licensing;
 see COPYING and LICENSES/QEMU-LICENSE.txt. No proprietary firmware is relicensed
 under the source license.
+
+The lossless14 functional encoder retains Copyright (C) 2026 RdWing and GPL-2.0-or-later, adapted from RdWing/z8-qemu. Public x265/x264 encode diagnostic data and are not Nikon/RED implementations. No RED, Resolve, CEVA or NeuPro SDK or private code is included.

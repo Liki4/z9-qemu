@@ -12,12 +12,8 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = '10.2.4'
 SHA256 = '821b545b92f165e57dddccac5077d76d4d436a226595b8813ad59306bbfd0746'
-SOURCES = ['qemu/nikon-z9-lab.c','qemu/nikon-z9-pixels.h','qemu/nikon-raw-pixels.h','qemu/prepare_source.py']
-SOURCES.append('qemu/arm-service-events.patch')
-SOURCES.append('qemu/designware-dma.patch')
-SOURCES.extend('qemu/' + name for name in (
-    'nikon-z9-pcie.h', 'nikon-z9-d980.h', 'nikon-z9-jpeg.h',
-    'nikon-z9-capture-nv16.h', 'nikon-z9-thumbnail-nv16.h'))
+SOURCES = sorted(p.relative_to(ROOT).as_posix() for p in (ROOT/'qemu').iterdir() if p.suffix in ('.c','.h','.py','.patch'))
+
 
 def digest(path):
     h = hashlib.sha256()
@@ -63,7 +59,9 @@ def main():
     if not (build/'build.ninja').exists(): subprocess.run([str(source/'configure'),*options],cwd=build,check=True)
     subprocess.run(['ninja','-j',str(a.jobs),'qemu-system-aarch64'],cwd=build,check=True)
     binary = build/'qemu-system-aarch64'
-    manifest = dict(qemu_version=VERSION,upstream_archive_sha256=SHA256,binary=str(binary),binary_sha256=digest(binary),sources={name:digest(ROOT/name) for name in SOURCES},configure=options)
+    manifest = dict(qemu_version=VERSION,upstream_archive_sha256=SHA256,binary=str(binary),binary_sha256=digest(binary),sources={name:digest(ROOT/name) for name in SOURCES},configure=options,
+        compiled_sources={p.name:digest(p) for p in (source/'hw/arm').glob('nikon-*') if p.suffix in ('.c','.h')},
+        compiled_upstream={name:digest(source/name) for name in ('hw/arm/Kconfig','hw/arm/meson.build','hw/pci-host/designware.c')})
     destination = ROOT/'.local/build-manifest.json'
     destination.parent.mkdir(exist_ok=True)
     destination.write_text(json.dumps(manifest,indent=2),encoding='utf-8')

@@ -33,7 +33,8 @@ static bool raw_pipeline_address(NikonZ9State *s, uint64_t encoded,
 static void raw_source_boundary_receive(NikonZ9State *s, bool single_input)
 {
     if (!s->raw_source_boundary_model || !s->raw_pixels ||
-        (!single_input && !s->event_timing_active) || s->primary_reset_stage) {
+        (!single_input && (!s->event_timing_active || primary_d980_finite_input_owned(s))) ||
+        s->primary_reset_stage) {
         return;
     }
     uint32_t active = s->engine150c_active &
@@ -85,11 +86,35 @@ static void raw_pipeline_tick(void *opaque)
 {
     NikonZ9State *s = opaque;
     unsigned row = s->raw_pipeline_row;
+    bool video = s->engine151_video_stream_model && s->engine151_active[0] &&
+        s->engine151_latched[0][0x200/4] == 1;
+    unsigned isp = video ? 0 : 1, source = video ? 0 : 2, input = video ? 1 : 0;
     uint64_t ys[3], uvs[3], total = 0;
     unsigned widths[3], heights[3], strides[3];
     bool halves[3];
     if (!s->raw_pipeline_model) { return; }
     timer_mod(s->raw_pipeline_timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + 33333333);
+    bool internal = video && s->video_raw_transport_model;
+    const NikonRawPixels *pixel_source = internal ? s->video_raw_pixels : s->raw_pixels;
+    if (internal) {
+        if (!s->video_raw_frame_ready || !pixel_source) { return; }
+        if (!s->video_raw_ring_latched) {
+            /* Native video C1 headers own the stream; C0 posts its global
+             * output slots without a separate C0 source-start transaction. */
+            /* PHOTO leaves valid header words in this retained register
+             * table. Only the six paired video addresses in every row own
+             * output spans; extra header validity cannot invalidate them.
+             * Subsequent refills still require a whole fresh generation. */
+            const uint64_t addresses=UINT64_C(0xfff0fff0fff0fff0);
+            if ((s->engine1543_buffer_valid[0] & addresses) != addresses) { return; }
+            memcpy(s->engine1543_latched[0],s->engine1542_config[10],sizeof(s->engine1543_latched[0]));
+            s->raw_pipeline_bank=0;s->raw_pipeline_row=0;row=0;
+            s->raw_pipeline_wait_bank=false;s->raw_pipeline_refill_notified=false;
+            s->video_raw_ring_latched=true;s->video_raw_ring_latches++;
+            s->raw_pipeline_bank_written[0]=0;
+        }
+    }
+
     /* Stopped-source reset profile: input clock and primary source unit
      * own new pixel work. Holding/resetting primary cancels future work,
      * without acknowledging a completed downstream frame on its behalf. */
@@ -100,11 +125,13 @@ static void raw_pipeline_tick(void *opaque)
     }
     /* Wait for the original parameter and source-gate submissions. Holding
      * a pending frame prevents overwriting buffers before the ISR accepts it. */
-    if (!s->raw_pixels || !s->engine1543_active[0] || s->engine1543_held[0] ||
-        !s->engine151_active[1] || !s->engine1518[2].config[0x30 / 4] ||
-        s->engine1542_pending[0] || s->engine1542_pending[10] || s->raw_primary_pending ||
-        (s->raw_pipeline_1514_completion_model && (s->engine151_pending[1] & 8)) ||
-        (s->raw_pipeline_151c_completion_model && (s->engine1518[2].pending & 0x08100000)) ||
+    if (!pixel_source || (!internal && (!s->engine1543_active[0] || s->engine1543_held[0])) ||
+        !s->engine151_active[isp] || !s->engine1518[source].config[0x30 / 4] ||
+        (video && (!s->engine1543_active[1] || s->engine1543_held[1])) ||
+        s->engine1542_pending[input] || s->engine1542_pending[10] || s->raw_primary_pending ||
+        (video && s->engine1542_pending[11]) ||
+        (s->raw_pipeline_1514_completion_model && (s->engine151_pending[isp] & 8)) ||
+        (s->raw_pipeline_151c_completion_model && (s->engine1518[source].pending & 0x08100000)) ||
         (s->event1508_global1_model && (s->event_global1_pending & 0x10))) { return; }
     /* Request the following batch separately, before its final frame.
      * The original callback wakes the frame task before storing its refill
@@ -113,7 +140,7 @@ static void raw_pipeline_tick(void *opaque)
      * software ordering without touching task flags or firmware code. */
     if (row == 3 && !s->raw_pipeline_refill_notified) {
         s->raw_pipeline_refill_notified = true;
-        s->engine1542_pending[10] |= 8;
+        s->engine1542_pending[internal ? 11 : 10] |= 8;
         raw_pipeline_irq_update(s);
         return;
     }
@@ -133,10 +160,17 @@ static void raw_pipeline_tick(void *opaque)
     unsigned bank = s->raw_pipeline_bank;
     if (row == 0 && s->raw_pipeline_wait_bank) {
         unsigned selected = submitted[2] & 1;
-        if (selected != bank && s->raw_pipeline_bank_written[selected] == UINT64_MAX) {
+        const uint64_t required = internal ? UINT64_C(0xfff0fff0fff0fff0) : UINT64_MAX;
+        /* Video posts only its six address pairs in each row. Its original
+         * C1 refill rewrites the same C0 bank, unlike preview bank toggles.
+         * Wait for a whole new address generation; unused header words do
+         * not own output spans. Partial low/high pairs never replace it. */
+        if ((internal || selected != bank) &&
+            (s->raw_pipeline_bank_written[selected] & required) == required) {
             memcpy(&s->engine1543_latched[0][(0x200 + selected * 0x200) / 4],
                    &submitted[(0x200 + selected * 0x200) / 4], 0x200);
-            s->raw_pipeline_bank_written[bank] = 0;
+            s->raw_pipeline_bank_written[internal ? selected : bank] = 0;
+            if (internal) { s->video_raw_ring_latches++; }
             bank = s->raw_pipeline_bank = selected;
             s->raw_pipeline_wait_bank = false;
         } else {
@@ -168,15 +202,33 @@ static void raw_pipeline_tick(void *opaque)
         }
         widths[ch] = w; heights[ch] = h; strides[ch] = stride; halves[ch] = half;
     }
+    /* A whole video frame preflights all six output spans together. An
+     * overlapping/bad later plane must not corrupt an earlier destination. */
+    if (video) {
+        uint64_t p[6], n[6];
+        for (unsigned ch = 0; ch < 3; ch++) {
+            p[2*ch] = ys[ch]; p[2*ch+1] = uvs[ch];
+            n[2*ch] = (uint64_t)strides[ch]*heights[ch];
+            n[2*ch+1] = n[2*ch]/(halves[ch] ? 2 : 1);
+        }
+        for (unsigned j = 0; j < 6; j++) {
+            for (unsigned k = 0; k < j; k++) {
+                if (p[j] < p[k]+n[k] && p[k] < p[j]+n[j]) {
+                    s->raw_pipeline_rejects++;return;
+                }
+            }
+        }
+    }
     for (unsigned ch = 0; ch < 3; ch++) {
         unsigned w = widths[ch], h = heights[ch], stride = strides[ch];
         bool half = halves[ch];
         size_t ybytes = (size_t)stride * h, uvbytes = ybytes / (half ? 2 : 1);
-        if (!s->raw_pipeline_cache[ch] || s->raw_pipeline_width[ch] != w ||
+        if (!s->raw_pipeline_cache[ch] || s->raw_pipeline_cache_internal[ch]!=internal || s->raw_pipeline_width[ch] != w ||
             s->raw_pipeline_height[ch] != h || s->raw_pipeline_stride[ch] != stride ||
             s->raw_pipeline_uv_half[ch] != half) {
             g_free(s->raw_pipeline_cache[ch]);
-            s->raw_pipeline_cache[ch] = nikon_raw_pixels_yuv(s->raw_pixels, w, h, stride, half);
+            s->raw_pipeline_cache[ch] = nikon_raw_pixels_yuv(pixel_source, w, h, stride, half);
+            s->raw_pipeline_cache_internal[ch]=internal;
             s->raw_pipeline_width[ch] = w; s->raw_pipeline_height[ch] = h;
             s->raw_pipeline_stride[ch] = stride; s->raw_pipeline_uv_half[ch] = half;
         }
@@ -197,9 +249,9 @@ static void raw_pipeline_tick(void *opaque)
      * Bit3 follows all actual RAW-derived plane writes. W1C owns reuse and
      * continuous mode retains its request. Physical line timing unverified. */
     if (s->raw_pipeline_1514_completion_model) {
-        s->engine151_pending[1] |= 8;
-        s->raw_pipeline_1514_completions++;
-        engine151_update_irq(s, 1);
+        s->engine151_pending[isp] |= 8;
+        s->raw_pipeline_1514_completions += !video;
+        engine151_update_irq(s, isp);
     }
     /* Functional combined-ISP completion after all three real Y/UV
      * transfers. Original ZR40e0ae38 W1C,40e9c8a8 and4107ae48 deliver
@@ -208,22 +260,37 @@ static void raw_pipeline_tick(void *opaque)
      * Disabled masks retain status; reset cancels ownership normally.
      * Physical latency and exact silicon processing remain unverified. */
     if (s->raw_pipeline_151c_completion_model) {
-        Z9Engine1518 *e = &s->engine1518[2];
+        Z9Engine1518 *e = &s->engine1518[source];
         e->pending |= 0x08100000;
         e->stream_frames++;
         engine1518_update_irq(e);
     }
+    /* Complete the configured primary/secondary input pair only
+     * after all actual RAW-derived Y/UV transfers succeed. The original
+     * group1 ISR/W1C and consumer own the source callbacks and references.
+     * Pending is retained while masked and prevents reuse until ACK.
+     * The exact physical stage behind bit31 remains unverified. */
+    if (s->raw_pipeline_input_pair_model) {
+        s->raw_primary_pending |= 0x80000000;
+        s->raw_pipeline_input_pair_completions++;
+        engine150c_stop_irq_update(s);
+    }
+    if (internal) {
+        s->video_raw_consumed_epoch=s->video_raw_decoded_epoch;s->video_raw_frame_ready=false;
+    }
     s->raw_pipeline_frames++;
+    s->raw_pipeline_video_frames += video;
     s->raw_pipeline_bytes += total;
     s->raw_pipeline_row = (row + 1) & 3;
     /* The original40e94934 callback consumes A0 bits0/4 as input boundary
      * notifications, distinct from C0 output bit0. This combined functional
      * ISP completes both sides after the RAW-derived writes. It does not
      * claim physical line timing. Disabled A0 produces no source event. */
-    if (s->engine1542_config[0][0x10 / 4] == 1) {
-        s->engine1542_pending[0] |= 0x11;
+    if (s->engine1542_config[input][0x10 / 4] == 1) {
+        s->engine1542_pending[input] |= 0x11;
     }
-    s->engine1542_pending[10] |= 1;
+    if (video) { s->engine1542_pending[11] |= 1; }
+    if (!internal) { s->engine1542_pending[10] |= 1; }
     if (row == 3) {
         s->raw_pipeline_refill_notified = false;
         s->raw_pipeline_wait_bank = true;
@@ -295,7 +362,10 @@ static char *get_raw_pipeline_state(Object *obj, Error **errp)
             s->raw_pipeline_stride[ch], s->raw_pipeline_y[ch], s->raw_pipeline_uv[ch],
             s->raw_pipeline_uv_half[ch] ? "NV12" : "NV16");
     }
-    g_string_append(out, "],\"scope\":\"functional streamed Bayer, simplified ISP, input boundaries and output completion; physical sensor protocol unproved\"}");
+    g_string_append_printf(out,"],\"video_stream_enabled\":%s,\"video_frames\":%" PRIu64 ",\"video_isp_acks\":%" PRIu64 ",\"video_source_acks\":%" PRIu64 ",\"video_isp_pending\":%u,\"video_source_pending\":%u,\"scope\":\"functional streamed Bayer, simplified ISP, checked RAM outputs and original IRQ ownership; physical sensor protocol and movie encoding unproved\"}",
+        s->engine151_video_stream_model ? "true" : "false",s->raw_pipeline_video_frames,
+        s->raw_pipeline_video_acks,s->engine1518[0].stream_acks,
+        s->engine151_pending[0],s->engine1518[0].pending);
     return g_string_free(out, false);
 }
 
@@ -351,4 +421,31 @@ static char *get_raw_pipeline_151c_completion_state(Object *obj, Error **errp)
         s->raw_pipeline_151c_completion_model ? "true" : "false",
         e->stream_frames, e->stream_acks, e->stream_cancelled,
         e->pending & 0x08100000);
+}
+
+static bool get_raw_pipeline_input_pair_model(Object *obj, Error **errp)
+{
+    return NIKON_Z9_LAB(obj)->raw_pipeline_input_pair_model;
+}
+
+static void set_raw_pipeline_input_pair_model(Object *obj, bool value, Error **errp)
+{
+    NikonZ9State *s = NIKON_Z9_LAB(obj);
+    if (s->image_ram.ram || s->image_ram.rom_device) {
+        error_setg(errp, "raw-pipeline-input-pair-model is immutable after realization");
+        return;
+    }
+    s->raw_pipeline_input_pair_model = value;
+}
+
+static char *get_raw_pipeline_input_pair_state(Object *obj, Error **errp)
+{
+    NikonZ9State *s = NIKON_Z9_LAB(obj);
+    return g_strdup_printf("{\"enabled\":%s,\"completions\":%" PRIu64
+        ",\"acks\":%" PRIu64 ",\"cancelled\":%" PRIu64 ",\"pending\":%u,"
+        "\"scope\":\"functional source input pair after actual pixel DMA\","
+        "\"physical_timing_verified\":false}",
+        s->raw_pipeline_input_pair_model ? "true" : "false",
+        s->raw_pipeline_input_pair_completions, s->raw_pipeline_input_pair_acks,
+        s->raw_pipeline_input_pair_cancelled, s->raw_primary_pending & 0x80000000);
 }
