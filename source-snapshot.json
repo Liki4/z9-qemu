@@ -157,7 +157,7 @@
       "nikon-zr-lab"
     ],
     "build_completed": true,
-    "full_native_photo_port_requalified": false,
+    "full_native_photo_port_requalified": true,
     "full_native_movie_port_requalified": false,
     "previous_python_tests_before_log_guard_fix": 13
   },
@@ -183,5 +183,29 @@
     "test_sha256": "3024cb24efb0e7febfdd857c0475e6ee19a9b1eb2405cf7c3f4e1c16fc1c7b74",
     "all_capture_helpers_imported_without_private_research_checkout": true,
     "full_native_photo_port_requalified": false
-  }
+  },
+  "public_photo_acceptance": {
+    "updated_utc": "2026-10-14T01:38:11.083358+00:00",
+    "run": "z9-public-shared146-repeated-raw-whole4",
+    "binary_sha256": "e2946a488e90cb7fc022acb575c81ea8fb5acdd9c2ad5ac54e0e544791966c2f",
+    "native_result_sha256": "b01882869633c6e0d537fdfaad59d968585f1a4b82f1544744d11a18adf5821c",
+    "independent_audit_sha256": "9872fdfdc4b176c11584eba0483bb7833c84112176f1475301ae119e4d788280",
+    "card_audit_sha256": "87f9200f83ca5c6cdd851d978b3f47b4ead28582c15743ccdce1cb32ba323535",
+    "photo_count": 2,
+    "all_raw_samples": 91411200,
+    "rawpy": "0.27.1",
+    "libraw": [
+      0,
+      22,
+      1
+    ],
+    "original_firmware_sha256": "6380ded18395ce11cb327c766721274c85127d2cf1a1e887ee60e3d156810bdd",
+    "full_native_photo_port_requalified": true,
+    "burst_verified": false,
+    "raw_precapture_verified": false,
+    "camera_movie_verified": false,
+    "original_algorithms_accepted": false,
+    "scope": "Current public Z9 shared146 binary and lossless14 recipe, same stopped guest/card, two released photos and per-photo two menu/fresh-view cycles, independent every-sample F0/preview checks; not physical camera or original Nikon codec/ISP/DSP qualification"
+  },
+  "capture_audit_dependency_preflight": true
 }

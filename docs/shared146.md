@@ -119,3 +119,24 @@ The complete suites pass 22 tests for Z9 and 25 for ZR. The research exporters
 retain the same portable import mapping for future snapshots. QEMU source and
 binary hashes remain unchanged; the full two-photo/NEF/menu/live-view rerun
 uses a fresh directory and still requires independent native acceptance.
+
+
+## Current public Z9 full-photo requalification
+
+The unchanged public binary `e2946a488e90cb7fc022acb575c81ea8fb5acdd9c2ad5ac54e0e544791966c2f` passed two
+released full RAW photos in the same original-firmware guest and virtual card.
+Each photo recovered fresh RAW-derived live view and two original PHOTO menu
+round trips. Both actual 8280 x 5520, 14-bit firmware-written NEFs independently
+decoded with RawPy 0.27.1 / LibRaw 0.22.1.
+All **91,411,200 RAW samples** match their own original guest producer dumps;
+all three JPEG previews per photo match that photo's completed codec jobs.
+Both F0 streams exclude LibRaw's uncompressed packed-size fallback. The card
+filesystem passed read-only audit. Private media/producer dumps are excluded.
+
+This qualifies the current Z9 functional photo recipe and its host port.
+Open F0 lossless14 and host JPEG/ISP remain substitute implementations; it
+does not establish original Nikon algorithms, continuous burst, RAW
+pre-capture, physical timing, movies or the separate ZR native profile.
+Linux output was used; interrupted earlier Windows-output runs remain failed
+or incomplete evidence. An optional decoder dependency is now checked before
+an audited capture starts, rather than discovered after the guest exits.
