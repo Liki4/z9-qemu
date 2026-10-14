@@ -49,7 +49,7 @@ debug stop. A QTest-only negative fixture must explicitly verify that pause
 and resume its dummy clock before testing a later valid request. The model
 does not automatically resume native faults or weaken admission rules.
 
-The unchanged original ZR firmware completed both latest bounded experiments.
+Historical runs 537/538 used the unchanged original ZR firmware and both bounded experiments terminated.
 Main10 timed out at the second START (state98); R3D timed out waiting for STOP
 (state82). Both owned guests exited and reported **zero codec image input and
 zero encoded pictures**. R3D advanced beyond its previous three-input stall:
@@ -59,8 +59,9 @@ This is partial pipeline progress, not an encoded movie or R3D acceptance.
 
 Full two START/STOP cycles, real card files, independent whole-movie decoding,
 fresh live view and menu recovery remain required. Historical repeated-photo
-and lossless14 results retain their original build scopes. The new public
-binary has not been requalified with a complete native photo/movie workflow.
+and lossless14 results retain their original build scopes. The current public
+Z9 binary has now passed the complete two-photo workflow described below.
+Camera movie acceptance and the separate public ZR photo recipe remain open.
 Current public build and firmware-free checks are recorded in
 `source-snapshot.json`; private raw evidence is not published.
 
@@ -140,3 +141,21 @@ pre-capture, physical timing, movies or the separate ZR native profile.
 Linux output was used; interrupted earlier Windows-output runs remain failed
 or incomplete evidence. An optional decoder dependency is now checked before
 an audited capture starts, rather than discovered after the guest exits.
+
+
+## Latest complete native recording observations
+
+The latest two ZR native recording workflows (543 Main10 / 544 R3D) have
+terminated and their owned guests exited. Main10 failed the bounded original
+input-consumption gate; R3D timed out waiting for STOP after state82. Both
+reported zero codec image input and zero encoded pictures. Complete read-only
+graph audits contain 38,782 / 20,862 records and retain the actual indirect
+calls and returns. They narrow the waiting stage; they do not qualify movies
+or establish physical buffer roles. The QEMU device implementation is unchanged.
+These are ZR runs on the shared board, not Z9 movie acceptance.
+
+The current public ZR photo recipe was also attempted on this public binary.
+It failed the bounded original input-consumption gate, with zero saved RAW
+producer and completed-JPEG dumps, and exited. It is not a requalified ZR
+photo release. Earlier private ZR full-photo evidence retains its older scope;
+current Z9 photo acceptance cannot be transferred to ZR.

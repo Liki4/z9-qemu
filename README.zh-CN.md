@@ -1,6 +1,6 @@
 # WonderLantern Z9 QEMU
 
-**2026-10-14 开发快照：shared146。** 已同步最新共享输入、所有权、功能 lossless14 及视频模型。**H.265/R3D 相机录像仍未完成。** 旧照片验收不能直接转移到新选项。见 [当前快照](docs/development-snapshot.md) 和 [ZR 仓库](https://github.com/WonderLantern/zr-qemu)。
+**2026-10-14 开发快照：shared146。** 已同步最新共享输入、所有权、功能 lossless14 及视频模型。**H.265/R3D 相机录像仍未完成。** 当前公开 lossless14 配置已通过两次完整拍照、逐次新取景和菜单恢复，以及全部 91,411,200 个 RAW 样本独立比对；其他新选项保留各自验证范围。见 [当前快照](docs/development-snapshot.md) 和 [ZR 仓库](https://github.com/WonderLantern/zr-qemu)。
 
 
 [English](README.md) · [构建](docs/build.md) · [固件输入](docs/firmware.md) · [RAW 拍摄](docs/capture.zh-CN.md) · [原理](docs/architecture.md) · [测试边界](docs/testing.md)
@@ -13,9 +13,10 @@
 字体、图标位图、校准数据、私人照片或原厂界面截图，也不会自动下载尼康固件。
 这是 WonderLantern 独立开展的研究与学习项目，与尼康没有隶属或背书关系。
 
-完整拍摄配置已通过快门释放、固件写入 **8280×5520、14 位 NEF**、拍后恢复新取景帧
-和两次真实 PHOTO 菜单往返。LibRaw 解码后的 **45,705,600 个 RAW 样本**全部等于
-实际 guest 生产缓冲；文件中的三路 JPEG 预览也逐字节匹配编码输出。
+当前公开 lossless14 配置在同一原固件进程和虚拟卡中完成两次释放快门拍摄，
+每张 **8280×5520、14 位 NEF** 拍后均恢复新取景并完成两次 PHOTO 菜单往返。
+RawPy/LibRaw 独立解码的 **91,411,200 个 RAW 样本**全部匹配各自 guest 生产缓冲，
+每张三路 JPEG 预览匹配当次编码输出，两份 F0 数据均排除未压缩尺寸回退。
 旧取景启动器曾通过三次菜单往返及四次独立像素校验。具体证据见 [测试说明](docs/testing.md)。本地模型
 能够运行原厂英文菜单、拍摄界面和 RAW 图像路径；ISO、快门、黑色描边及红色无卡
 图标来自固件。网页仅展示 QEMU LCD，不自行绘制相机界面。

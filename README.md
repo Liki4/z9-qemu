@@ -1,6 +1,6 @@
 # WonderLantern Z9 QEMU
 
-**2026-10-14 development snapshot: shared146.** Latest shared devices and functional lossless14, DSP/mailbox and video backends are included. **Camera H.265/R3D recording remains incomplete.** Previous full capture acceptance does not qualify every new option. See [current snapshot](docs/development-snapshot.md). The standalone ZR companion is [WonderLantern/zr-qemu](https://github.com/WonderLantern/zr-qemu).
+**2026-10-14 development snapshot: shared146.** Latest shared devices and functional lossless14, DSP/mailbox and video backends are included. **Camera H.265/R3D recording remains incomplete.** The current public lossless14 recipe passed two full photos, per-photo fresh live view and menu recovery, and independent checks of all 91,411,200 RAW samples. Other new options retain their own verification limits. See [current snapshot](docs/development-snapshot.md). The standalone ZR companion is [WonderLantern/zr-qemu](https://github.com/WonderLantern/zr-qemu).
 
 
 [中文](README.zh-CN.md) · [Build](docs/build.md) · [Firmware](docs/firmware.md) · [Usage](docs/usage.md) · [RAW capture](docs/capture.md) · [Architecture](docs/architecture.md) · [Debugging](docs/debugging.md) · [Research notes](docs/research-notes.md) · [Testing](docs/testing.md) · [Publication](docs/publication.md)
@@ -28,11 +28,13 @@ The experimental pixel path consumes a local RGGB input and writes the
 firmware's submitted output buffers; LCD composition uses those buffers and
 the original graphics overlay. It does not paste an image behind a browser UI.
 
-The full capture profile has passed shutter release, a firmware-written
-**8280×5520, 14-bit NEF**, fresh post-shot live view and two actual PHOTO-menu
-round trips. LibRaw independently decoded all **45,705,600 RAW samples** and
-matched them to the guest producer buffer; all three embedded JPEG previews
-matched completed encoder outputs. The older preview-only launcher also
+The current public lossless14 profile passed two released full photos in
+one original-firmware session and virtual card. Each **8280×5520, 14-bit NEF**
+was followed by fresh live view and two actual PHOTO-menu round trips.
+RawPy/LibRaw independently decoded all **91,411,200 RAW samples** and matched
+them to each photo's guest producer buffer. All three JPEG previews per photo
+matched completed encoder outputs; both F0 streams exclude the packed-size
+fallback. See [current evidence](docs/shared146.md#current-public-z9-full-photo-requalification). The older preview-only launcher also
 passed three MENU returns with independent LCD pixel comparisons.
 See [capture](docs/capture.md) for reproducible commands and model limits,
 [testing](docs/testing.md) for the evidence, and [service-core events](docs/service-events.md)
