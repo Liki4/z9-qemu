@@ -61,7 +61,8 @@ Full two START/STOP cycles, real card files, independent whole-movie decoding,
 fresh live view and menu recovery remain required. Historical repeated-photo
 and lossless14 results retain their original build scopes. The current public
 Z9 binary has now passed the complete two-photo workflow described below.
-Camera movie acceptance and the separate public ZR photo recipe remain open.
+Camera movie acceptance remains open. The separate current public ZR photo
+recipe has now passed its own complete audited two-photo workflow; see the ZR repository.
 Current public build and firmware-free checks are recorded in
 `source-snapshot.json`; private raw evidence is not published.
 
@@ -143,7 +144,7 @@ or incomplete evidence. An optional decoder dependency is now checked before
 an audited capture starts, rather than discovered after the guest exits.
 
 
-## Latest complete native recording observations
+## Historical 543/544 native recording observations
 
 The latest two ZR native recording workflows (543 Main10 / 544 R3D) have
 terminated and their owned guests exited. Main10 failed the bounded original
@@ -154,8 +155,21 @@ calls and returns. They narrow the waiting stage; they do not qualify movies
 or establish physical buffer roles. The QEMU device implementation is unchanged.
 These are ZR runs on the shared board, not Z9 movie acceptance.
 
-The current public ZR photo recipe was also attempted on this public binary.
+Historical public ZR photo attempt whole1 used this public binary.
 It failed the bounded original input-consumption gate, with zero saved RAW
 producer and completed-JPEG dumps, and exited. It is not a requalified ZR
 photo release. Earlier private ZR full-photo evidence retains its older scope;
 current Z9 photo acceptance cannot be transferred to ZR.
+
+
+## Current native movie wait batch 545/546
+
+The unchanged private shared146b board completed two further bounded ZR
+recording attempts, with full zero-drop read-only traces (22,134 R3D /
+49,995 Main10 records). R3D still timed out at STOP; Main10 failed the
+complete original input-consumption gate. Both have zero codec picture
+input and zero encoded pictures. Eight actual wait/return pairs and seven
+original producer/consumer positions were observed together. The source
+clock remains active while later frames stall; active-clock status alone
+does not establish incoming data, buffer ownership or encoder delivery.
+These are ZR research observations, not Z9 movie or original algorithm acceptance.

@@ -36,7 +36,7 @@ class LogGuardTests(unittest.TestCase):
             def seek(self,offset):return original.seek(offset)
             def read(self,size):
                 original.read(size)
-                raise OSError(61,'No data available')
+                raise OSError(getattr(errno,'ENODATA',61),'No data available')
             def close(self):original.close()
         self.guard.reader=PartialFailure()
         self.assertTrue(self.guard.poll());self.assertEqual(self.guard.transient_retries,1)
@@ -44,7 +44,7 @@ class LogGuardTests(unittest.TestCase):
 
     def test_persistent_unavailability_is_not_success(self):
         self.append(b'not yet readable')
-        with patch.object(Path,'open',side_effect=OSError(61,'No data available')):
+        with patch.object(Path,'open',side_effect=OSError(getattr(errno,'ENODATA',61),'No data available')):
             with patch('native_log_guard.time.monotonic',side_effect=[0,2]):
                 with self.assertRaises(OSError):self.guard.poll()
         self.assertEqual(self.guard.position,0)
