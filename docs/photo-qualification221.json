@@ -1,0 +1,132 @@
+{
+  "schema": 1,
+  "shared_revision": 221,
+  "model": "Z9",
+  "firmware": "C5.32",
+  "binary_sha256": "efb038591fc58f3d5a8a85931b7ebbffb9a5fae9132b40fda652e94a771c5a3b",
+  "native_result_sha256": "dfef8a0aae3c91e9f58065ba9a4124781954cc633a22d7f658dbd763e22c732a",
+  "raw_audit_sha256": "b1b4f6046093585239ba8569ea0a8aec3e1a92a3421f919807d7cc5aec83769b",
+  "photos": [
+    {
+      "cycle": 1,
+      "file": "DCIM/100NCZ_9/DSC_0001.NEF",
+      "bytes": 38045598,
+      "sha256": "9f75f0bec8b331c42ae6a8e793bb2dd9748eb0727182388722919c9190819bae",
+      "raw_samples": 45705600,
+      "raw_producer_job": 1,
+      "producer_sha256": "e6013c5a58fbf7b10e78bc3c2af55c18d0765c8dbefcee0635472b36239f423e",
+      "codec_profile": {
+        "encoding": "nikon-f0-lossless14",
+        "libraw_packed_fallback_excluded": true,
+        "predictor_seeds": [
+          2048,
+          2048,
+          2048,
+          2048
+        ],
+        "linearization_sha256": "097157ad8c916ab3a5b5d00cffc6a0893ccb8d24d02082de92924a8b08ed1372",
+        "raw_strip_bytes": 36840862,
+        "uncompressed_packed_bytes": 80017920,
+        "independent_decoder_required": true,
+        "physical_codec_verified": false
+      },
+      "full_raw_accepted": true,
+      "previews": [
+        {
+          "decoded_size": [
+            160,
+            120
+          ],
+          "native_job": 9,
+          "bytes": 8224,
+          "sha256": "0d7b70ac68f076897c0f7a296d523e5259a5df874bca1e037dc984e7be8f2830"
+        },
+        {
+          "decoded_size": [
+            8256,
+            5504
+          ],
+          "native_job": 1,
+          "bytes": 634823,
+          "sha256": "c860b92ea96414651410105ca2a8ec2734dca097e826a822200d30b7d0fb1ccf"
+        },
+        {
+          "decoded_size": [
+            1620,
+            1080
+          ],
+          "native_job": 3,
+          "bytes": 294286,
+          "sha256": "1a8d2a73f1c2e237e85b58ff33e3df7034cda95a9d8f6e3784e29b97f5b8a7ff"
+        }
+      ],
+      "fresh_liveview_and_menus": true
+    },
+    {
+      "cycle": 2,
+      "file": "DCIM/100NCZ_9/DSC_0002.NEF",
+      "bytes": 38045598,
+      "sha256": "65c14b191e484fe293e47920a5b537939e9f22dc824fb62833ba17c245b0bf98",
+      "raw_samples": 45705600,
+      "raw_producer_job": 2,
+      "producer_sha256": "e6013c5a58fbf7b10e78bc3c2af55c18d0765c8dbefcee0635472b36239f423e",
+      "codec_profile": {
+        "encoding": "nikon-f0-lossless14",
+        "libraw_packed_fallback_excluded": true,
+        "predictor_seeds": [
+          2048,
+          2048,
+          2048,
+          2048
+        ],
+        "linearization_sha256": "097157ad8c916ab3a5b5d00cffc6a0893ccb8d24d02082de92924a8b08ed1372",
+        "raw_strip_bytes": 36840862,
+        "uncompressed_packed_bytes": 80017920,
+        "independent_decoder_required": true,
+        "physical_codec_verified": false
+      },
+      "full_raw_accepted": true,
+      "previews": [
+        {
+          "decoded_size": [
+            160,
+            120
+          ],
+          "native_job": 18,
+          "bytes": 8224,
+          "sha256": "0d7b70ac68f076897c0f7a296d523e5259a5df874bca1e037dc984e7be8f2830"
+        },
+        {
+          "decoded_size": [
+            8256,
+            5504
+          ],
+          "native_job": 10,
+          "bytes": 634823,
+          "sha256": "c860b92ea96414651410105ca2a8ec2734dca097e826a822200d30b7d0fb1ccf"
+        },
+        {
+          "decoded_size": [
+            1620,
+            1080
+          ],
+          "native_job": 12,
+          "bytes": 294286,
+          "sha256": "1a8d2a73f1c2e237e85b58ff33e3df7034cda95a9d8f6e3784e29b97f5b8a7ff"
+        }
+      ],
+      "fresh_liveview_and_menus": true
+    }
+  ],
+  "all_raw_samples": 91411200,
+  "native_checks": 3457,
+  "libraw": [
+    0,
+    22,
+    1
+  ],
+  "same_session_repeated_raw_accepted": true,
+  "burst_mode_verified": false,
+  "original_algorithms_verified": false,
+  "scope": "Current public launcher: two released-shutter full RAW/photos, all actual NEF samples, three previews per photo and fresh menu recovery; not held burst, movie or original codec arithmetic"
+}

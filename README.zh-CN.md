@@ -1,5 +1,13 @@
 # WonderLantern Z9 QEMU
 
+[Current Z9 two-photo full RAW qualification / 当前Z9完整双拍验收](docs/photo-qualification221.json)
+
+
+[Portable ZR recording qualification / 公开包录制验收](docs/recording-qualification221.json)
+
+**shared221共享源码更新。** ZR C1.11的两段30秒H.265与R3D有完整原生及独立文件证据；不能据此宣称Z9录像通过。以下两次Z9照片数据保留shared146构建范围。详见[本轮实现、验证与限制](docs/shared221.md)。
+
+
 **2026-10-14 开发快照：shared146。** 已同步最新共享输入、所有权、功能 lossless14 及视频模型。**H.265/R3D 相机录像仍未完成。** 当前公开 lossless14 配置已通过两次完整拍照、逐次新取景和菜单恢复，以及全部 91,411,200 个 RAW 样本独立比对；其他新选项保留各自验证范围。见 [当前快照](docs/development-snapshot.md) 和 [ZR 仓库](https://github.com/WonderLantern/zr-qemu)。
 
 

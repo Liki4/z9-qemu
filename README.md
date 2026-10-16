@@ -1,6 +1,15 @@
 # WonderLantern Z9 QEMU
 
-**2026-10-14 development snapshot: shared146.** Latest shared devices and functional lossless14, DSP/mailbox and video backends are included. **Camera H.265/R3D recording remains incomplete.** The current public lossless14 recipe passed two full photos, per-photo fresh live view and menu recovery, and independent checks of all 91,411,200 RAW samples. Other new options retain their own verification limits. See [current snapshot](docs/development-snapshot.md). The standalone ZR companion is [WonderLantern/zr-qemu](https://github.com/WonderLantern/zr-qemu).
+[Current Z9 two-photo full RAW qualification / 当前Z9完整双拍验收](docs/photo-qualification221.json)
+
+
+[Portable ZR recording qualification / 公开包录制验收](docs/recording-qualification221.json)
+
+**shared221 source update.** The shared devices and functional HE codec now
+have complete ZR C1.11 two30-second Main10/R3D recording evidence. This is not
+Z9 VIDEO qualification. The current portable Z9 two-photo workflow also passed full NEF/sample/preview and menu-recovery checks. Historical results below retain their revision scope;
+current source/portable-build scopes are listed in [shared221](docs/shared221.md).
+The companion is [WonderLantern/zr-qemu](https://github.com/WonderLantern/zr-qemu).
 
 
 [中文](README.zh-CN.md) · [Build](docs/build.md) · [Firmware](docs/firmware.md) · [Usage](docs/usage.md) · [RAW capture](docs/capture.md) · [Architecture](docs/architecture.md) · [Debugging](docs/debugging.md) · [Research notes](docs/research-notes.md) · [Testing](docs/testing.md) · [Publication](docs/publication.md)
@@ -28,7 +37,7 @@ The experimental pixel path consumes a local RGGB input and writes the
 firmware's submitted output buffers; LCD composition uses those buffers and
 the original graphics overlay. It does not paste an image behind a browser UI.
 
-The current public lossless14 profile passed two released full photos in
+The shared146 public lossless14 profile passed two released full photos in
 one original-firmware session and virtual card. Each **8280×5520, 14-bit NEF**
 was followed by fresh live view and two actual PHOTO-menu round trips.
 RawPy/LibRaw independently decoded all **91,411,200 RAW samples** and matched
@@ -58,7 +67,7 @@ instructions, PC, readiness flags, OS wait results or watchdogs.
 
 ## Quick start
 
-Linux, Python 3.12+, a C toolchain and about 6 GB of available memory are a
+Linux, Python 3.12+, C/C++17 toolchains and about 6 GB of available memory are a
 practical starting point. On Windows explicitly select your intended WSL
 distribution. This project's environment is `ubuntu-noble-nikon`; the
 unrelated coursework distribution `ubuntu-noble` is excluded by the tools.
